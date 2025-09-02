@@ -16,13 +16,15 @@ from .serializers import OrderSerializer
 
 # Create your views here.
 
+
 def get_session_id(request):
     session_id = request.session.session_key
     if session_id == None:
         request.session.save()
         session_id = request.session.session_key
-    
+
     return session_id
+
 
 class InitiateKhaltiPayment(generics.CreateAPIView):
     serializer_class = OrderSerializer
@@ -52,13 +54,14 @@ class InitiateKhaltiPayment(generics.CreateAPIView):
         d = datetime.date(yr, mt, dt)
         current_date = d.strftime('%Y%m%d')  # 20230626
         order_number = current_date + str(order.id)
-        order.order_number = order_number   
+        order.order_number = order_number
         order.save()
 
         # khalti payment initialization
 
         url = "https://a.khalti.com/api/v2/epayment/initiate/"
-        return_url = "http://127.0.0.1:8000/orders/verify-khalti-payment/"
+        return_url = request.build_absolute_uri(
+            '/orders/verify-khalti-payment/')
         purchase_order_id = order.order_number
         amount = float(order.grand_total) * 100
         customer_name = f"{order.first_name} {order.last_name}"
@@ -116,33 +119,37 @@ class VerifyKhaltiPayment(View):
                 return Response({'detail': "Order does not exists"}, status=status.HTTP_404_NOT_FOUND)
             except:
                 return Response({"detail": "Something went wrong"}, status=status.HTTP_400_BAD_REQUEST)
-            
+
             payment = Payment(
-                session_key = order.session_key,
-                payment_id = payment_id,
-                amount_paid = amount,
-                payment_method = "Khalti",
-                status = "complete"
+                session_key=order.session_key,
+                payment_id=payment_id,
+                amount_paid=amount,
+                payment_method="Khalti",
+                status="complete"
             )
             payment.save()
             order.status = "Confirmed"
             order.payment = payment
             order.is_ordered = True
             order.save()
-            
+
             cart = Cart.objects.get(session_key=order.session_key)
             cart_items = cart.items.all()
 
-            move_cart_items_to_ordered_items(request, order, payment, cart_items)
+            move_cart_items_to_ordered_items(
+                request, order, payment, cart_items)
 
-            response = redirect("https://the-scarlett-cloud.vercel.app/payment-success")
+            response = redirect(
+                "https://the-scarlett-cloud.vercel.app/payment-success")
             response['Cache-Control'] = 'no-store'
             return response
 
         else:
-            response = redirect("https://the-scarlett-cloud.vercel.app/payment-failure")
+            response = redirect(
+                "https://the-scarlett-cloud.vercel.app/payment-failure")
             response['Cache-Control'] = 'no-store'
             return response
+
 
 class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
@@ -150,21 +157,21 @@ class OrderDetailView(generics.RetrieveAPIView):
 
     def get_object(self):
         session_key = get_session_id(self.request)
-        queryset = Order.objects.filter(session_key=session_key).order_by('-created_at')
+        queryset = Order.objects.filter(
+            session_key=session_key).order_by('-created_at')
 
         if queryset.exists():
             return queryset.first()
         else:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         order_serializer = self.get_serializer(instance)
         return Response(order_serializer.data, status=status.HTTP_200_OK)
-    
+
 
 class OrderListView(generics.ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
     permission_classes = [AllowAny]
-

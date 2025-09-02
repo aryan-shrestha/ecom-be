@@ -1,131 +1,317 @@
-from rest_framework import generics, status
+from datetime import datetime, timedelta
+from django.utils import timezone
+from django.contrib.auth.models import User
+from rest_framework import viewsets, status, serializers
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from Products.models import Product
 from cart.models import Cart, CartItem
-from cart.serializers import CartItemSerializer, CartSerializer
+from cart.serializers import CartItemSerializer, CartSerializer, BulkCartOperationSerializer
+
 # Create your views here.
 
+
 def get_session_id(request):
+    """Get or create session ID for anonymous users"""
     session_id = request.session.session_key
     if session_id == None:
         request.session.save()
         session_id = request.session.session_key
-    
     return session_id
 
-class CartDetail(generics.RetrieveAPIView):
+
+def get_or_create_cart(request):
+    """Get or create cart for authenticated or anonymous users"""
+    if request.user.is_authenticated:
+        # For authenticated users, try to get anonymous cart and assign user to it
+        try:
+            anonymous_session_key = request.session.get('cart_session_key')
+            if anonymous_session_key:
+                cart = Cart.objects.get(
+                    session_key=anonymous_session_key, user__isnull=True)
+                # Assign user to the cart and update session key
+                cart.user = request.user
+                cart.session_key = get_session_id(request)
+                cart.save()
+            else:
+                # No anonymous cart session key, check if user already has a cart
+                cart = Cart.objects.filter(user=request.user).first()
+                if not cart:
+                    # Create new cart for user
+                    session_key = get_session_id(request)
+                    cart = Cart.objects.create(
+                        user=request.user,
+                        session_key=session_key
+                    )
+        except Cart.DoesNotExist:
+            # Anonymous cart doesn't exist, check if user already has a cart
+            cart = Cart.objects.filter(user=request.user).first()
+            if not cart:
+                # Create new cart for user
+                session_key = get_session_id(request)
+                cart = Cart.objects.create(
+                    user=request.user,
+                    session_key=session_key
+                )
+    else:
+        # For anonymous users, use session-based cart
+        session_key = get_session_id(request)
+        cart, _ = Cart.objects.get_or_create(
+            session_key=session_key,
+            user__isnull=True
+        )
+
+    # Update session data with current cart's session key
+    request.session['cart_session_key'] = cart.session_key
+    request.session.save()
+    return cart
+
+
+def validate_inventory(product, quantity):
+    """Validate if requested quantity is available"""
+    # Assuming Product model has a stock field
+    if hasattr(product, 'stock') and product.stock < quantity:
+        raise serializers.ValidationError(
+            f"Only {product.stock} items available for {product.name}"
+        )
+    return True
+
+
+def clean_expired_carts():
+    """Remove carts older than 30 days"""
+    expiry_date = timezone.now().date() - timedelta(days=30)
+    Cart.objects.filter(date_added__lt=expiry_date, user__isnull=True).delete()
+
+
+class CartViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for cart operations with comprehensive functionality.
+    Supports both authenticated and anonymous users.
+    """
     serializer_class = CartSerializer
     permission_classes = [AllowAny]
 
-    def get_object(self):
-        # retrieve the user's cart based on the session key
-        
-        session_key = get_session_id(self.request)
-        queryset = Cart.objects.filter(session_key=session_key)
-
-        if queryset.exists():
-            return queryset.first()
+    def get_queryset(self):
+        """Get cart based on user authentication status"""
+        if self.request.user.is_authenticated:
+            return Cart.objects.filter(user=self.request.user)
         else:
-            return Cart.objects.create(session_key=session_key)
+            session_key = get_session_id(self.request)
+            return Cart.objects.filter(session_key=session_key)
 
-    def retrieve(self, request, *args, **kwargs):
-        instance = self.get_object()
-        cart_serializer = self.get_serializer(instance)
-        cart_items = CartItem.objects.filter(cart=instance, is_checked_out=False)
+    def get_object(self):
+        """Get or create cart for current user/session"""
+        return get_or_create_cart(self.request)
+
+    @action(detail=False, methods=['get'])
+    def details(self, request):
+        """Get cart details with items"""
+        # Clean expired carts periodically
+        clean_expired_carts()
+
+        cart = self.get_object()
+        cart_serializer = self.get_serializer(cart)
+
+        cart_items = CartItem.objects.filter(cart=cart, is_checked_out=False)
+
         cart_items_serializer = CartItemSerializer(cart_items, many=True)
-        response_data = {
+        return Response({
             "cart": cart_serializer.data,
             "cart_items": cart_items_serializer.data
-        }
-        return Response(response_data, status=status.HTTP_200_OK)
+        }, status=status.HTTP_200_OK)
 
-class CartOperationsView(generics.CreateAPIView):
-    serializer_class = CartItemSerializer
-    queryset = CartItem.objects.all()
-    permission_classes = [AllowAny]
-
-    def create(self, request, *args, **kwargs):
-        session_key = get_session_id(request)
+    @action(detail=False, methods=['post'], url_path='add-item')
+    def add_item(self, request):
+        """Add item to cart with inventory validation"""
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
 
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            return Response({"detail": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-        cart, created = Cart.objects.get_or_create(session_key=session_key)
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+            return Response(
+                {"detail": "Product not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validate inventory
+        try:
+            validate_inventory(product, quantity)
+        except serializers.ValidationError as e:
+            return Response(
+                {"detail": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cart = self.get_object()
+        cart_item, _ = CartItem.objects.get_or_create(
+            cart=cart,
+            product=product,
+            defaults={'quantity': 0}
+        )
         cart_item.quantity += quantity
         cart_item.save()
 
-        serializer = self.get_serializer(cart_item)
+        serializer = CartItemSerializer(cart_item)
+        return Response({
+            'cart_item': serializer.data,
+            'cart_total': cart.total
+        }, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def patch(self, request, *args, **kwargs):
-        session_key = get_session_id(request)
+    @action(detail=False, methods=['patch'])
+    def update_item(self, request):
+        """Update item quantity (increase/decrease)"""
         operation = request.data.get('operation')
         product_id = request.data.get('product_id')
 
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            return Response({'detail': 'Product does not exists'}, status=status.HTTP_404_NOT_FOUND)
-        
-        cart_item = CartItem.objects.filter(cart__session_key=session_key, product=product).first()
-        
+            return Response(
+                {'detail': 'Product does not exist'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cart = self.get_object()
+        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+
         if not cart_item:
-            return Response({'detail': 'Item not found in the cart'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {'detail': 'Item not found in the cart'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         if operation == 'increase':
+            try:
+                validate_inventory(product, cart_item.quantity + 1)
+            except serializers.ValidationError as e:
+                return Response(
+                    {"detail": str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             cart_item.quantity += 1
         elif operation == 'decrease':
             if cart_item.quantity <= 1:
                 cart_item.delete()
-                return Response({'detail': 'Item in cart deleted'}, status=status.HTTP_204_NO_CONTENT)
+                return Response(
+                    {'detail': 'Item removed from cart', 'cart_total': cart.total},
+                    status=status.HTTP_204_NO_CONTENT
+                )
             else:
                 cart_item.quantity -= 1
         else:
-            return Response({'detail': 'Invalid operation'}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return Response(
+                {'detail': 'Invalid operation. Use "increase" or "decrease"'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         cart_item.save()
-        serializer = self.get_serializer(cart_item)
-        data = {
+        serializer = CartItemSerializer(cart_item)
+        return Response({
             'cart_item': serializer.data,
-            'cart_total': cart_item.cart.total
-        }
-        return Response(data=data, status=status.HTTP_200_OK)
+            'cart_total': cart.total
+        }, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['delete'])
+    def remove_item(self, request):
+        """Remove specific item from cart"""
+        product_id = request.data.get('product_id')
 
-class CartItemDeleteView(generics.DestroyAPIView):
-    serializer_class = CartItemSerializer
-    lookup_field = 'pk'
-    permission_classes = [AllowAny]
-
-
-    def get_object(self):
-        
-        cart_item_id = self.kwargs.get('pk')
         try:
-            return CartItem.objects.get(id=cart_item_id)
-        except CartItem.DoesNotExist:
-            return Response({'detail': 'Cart Item not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    def delete(self, request, *args, **kwargs):
-        session_key = get_session_id(request)
-        cart_item = self.get_object()
-        cart = cart_item.cart
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return Response(
+                {'detail': 'Product does not exist'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        if session_key == cart.session_key:
-            cart_item.delete()
-            data = {
-                'detail': 'Cart item deleted',
-                'cart_total': cart_item.cart.total
-            }
-            return Response(data=data)
-        else:
-            return Response({'detail': 'Invalid session id'}, status=status.HTTP_401_UNAUTHORIZED)
+        cart = self.get_object()
+        cart_item = CartItem.objects.filter(cart=cart, product=product).first()
+
+        if not cart_item:
+            return Response(
+                {'detail': 'Item not found in the cart'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        cart_item.delete()
+        return Response({
+            'detail': 'Item removed from cart',
+            'cart_total': cart.total
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def clear(self, request):
+        """Clear all items from cart"""
+        cart = self.get_object()
+        cart.items.filter(is_checked_out=False).delete()
+        return Response({
+            'detail': 'Cart cleared successfully',
+            'cart_total': cart.total
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        """Bulk update multiple cart items"""
+        serializer = BulkCartOperationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        cart = self.get_object()
+        operations = serializer.validated_data['operations']
+        results = []
+
+        for operation in operations:
+            try:
+                product = Product.objects.get(id=operation['product_id'])
+                cart_item = CartItem.objects.filter(
+                    cart=cart, product=product).first()
+
+                if operation['action'] == 'update_quantity':
+                    if cart_item:
+                        validate_inventory(product, operation['quantity'])
+                        cart_item.quantity = operation['quantity']
+                        cart_item.save()
+                        results.append({
+                            'product_id': product.id,
+                            'status': 'updated',
+                            'quantity': cart_item.quantity
+                        })
+                    else:
+                        results.append({
+                            'product_id': product.id,
+                            'status': 'not_found'
+                        })
+
+                elif operation['action'] == 'remove':
+                    if cart_item:
+                        cart_item.delete()
+                        results.append({
+                            'product_id': product.id,
+                            'status': 'removed'
+                        })
+                    else:
+                        results.append({
+                            'product_id': product.id,
+                            'status': 'not_found'
+                        })
+
+            except Product.DoesNotExist:
+                results.append({
+                    'product_id': operation['product_id'],
+                    'status': 'product_not_found'
+                })
+            except serializers.ValidationError as e:
+                results.append({
+                    'product_id': operation['product_id'],
+                    'status': 'error',
+                    'error': str(e)
+                })
+
+        return Response({
+            'results': results,
+            'cart_total': cart.total
+        }, status=status.HTTP_200_OK)

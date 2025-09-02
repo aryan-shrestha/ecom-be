@@ -8,8 +8,9 @@ urlpatterns = [
     path('products/', include('Products.urls')),
     path('cart/', include('cart.urls')),
     path('orders/', include('orders.urls')),
-    path('category/', include('category.urls')),
-    path('account/', include('account.urls')),
+    path('categories/', include('category.urls')),
+    path('accounts/', include('account.urls')),
+    path('files/', include('file_upload.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
 ]

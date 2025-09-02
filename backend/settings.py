@@ -1,9 +1,7 @@
 from datetime import timedelta
 from pathlib import Path
+from decouple import config
 import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-from django.conf import settings
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,10 +11,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#thsn_8o#lc*hi$n3x)72t3j-9f_t%_iak8)=z%aun6h(n^&nv'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -30,9 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'django_filters',
     'rest_framework',
+
     'corsheaders',
     'cloudinary',
     'djoser',
@@ -42,6 +41,7 @@ INSTALLED_APPS = [
     'Products',
     'category',
     'orders',
+    'file_upload',
 
 ]
 
@@ -64,6 +64,19 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Settings
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://192.168.1.65:5173",
+    "https://the-scarlett-cloud.vercel.app",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = False
 
 SESSION_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SECURE = True
@@ -145,12 +158,16 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'backend.authentication.CsrfExemptSessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ),
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
+    'DEFAULT_PAGINATION_CLASS': 'backend.pagination.CustomPageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
+
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
@@ -161,9 +178,9 @@ SIMPLE_JWT = {
 }
 
 cloudinary.config(
-    cloud_name = "djwyoxnkk",
-    api_key = "569187721663967",
-    api_secret = "2g1AqyrTrBe47HYWnNLn8yEntcE"
+    cloud_name=config('CLOUDINARY_CLOUD_NAME'),
+    api_key=config('CLOUDINARY_API_KEY'),
+    api_secret=config('CLOUDINARY_API_SECRET')
 )
 
-CLOUDINARY_URL="cloudinary://569187721663967:2g1AqyrTrBe47HYWnNLn8yEntcE@djwyoxnkk"
+CLOUDINARY_URL = config('CLOUDINARY_URL')
