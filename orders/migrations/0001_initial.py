@@ -9,26 +9,30 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('Products', '0001_initial'),
+        ('product', '0001_initial'),
     ]
 
     operations = [
         migrations.CreateModel(
             name='Order',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('session_key', models.CharField(max_length=255)),
-                ('order_number', models.CharField(blank=True, max_length=20, null=True)),
+                ('order_number', models.CharField(
+                    blank=True, max_length=20, null=True)),
                 ('first_name', models.CharField(max_length=50)),
                 ('last_name', models.CharField(max_length=50)),
                 ('phone_no', models.CharField(max_length=15)),
                 ('email', models.CharField(max_length=50)),
                 ('address_line_1', models.CharField(max_length=50)),
                 ('address_line_2', models.CharField(blank=True, max_length=50)),
-                ('order_note', models.CharField(blank=True, max_length=500, null=True)),
+                ('order_note', models.CharField(
+                    blank=True, max_length=500, null=True)),
                 ('grand_total', models.FloatField()),
                 ('vat', models.FloatField()),
-                ('status', models.CharField(choices=[('New', 'New'), ('Confirmed', 'Confirmed'), ('Delivered', 'Delivered'), ('Cancelled', 'Cancelled')], default='New', max_length=10)),
+                ('status', models.CharField(choices=[('New', 'New'), ('Confirmed', 'Confirmed'), (
+                    'Delivered', 'Delivered'), ('Cancelled', 'Cancelled')], default='New', max_length=10)),
                 ('is_ordered', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
@@ -37,7 +41,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Payment',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('session_key', models.CharField(max_length=255)),
                 ('payment_id', models.CharField(max_length=100)),
                 ('payment_method', models.CharField(max_length=100)),
@@ -49,19 +54,24 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OrderItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.FloatField()),
                 ('ordered', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='items', to='orders.order')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Products.product')),
-                ('payment', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='orders.payment')),
+                ('order', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='items', to='orders.order')),
+                ('product', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='product.product')),
+                ('payment', models.ForeignKey(blank=True, null=True,
+                 on_delete=django.db.models.deletion.SET_NULL, to='orders.payment')),
             ],
         ),
         migrations.AddField(
             model_name='order',
             name='payment',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='orders.payment'),
+            field=models.ForeignKey(
+                blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='orders.payment'),
         ),
     ]

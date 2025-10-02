@@ -31,17 +31,18 @@ INSTALLED_APPS = [
 
     'django_filters',
     'rest_framework',
-
     'corsheaders',
     'cloudinary',
     'djoser',
 
     'account',
     'cart',
-    'Products',
+    'product',
     'category',
     'orders',
     'file_upload',
+    'inventory',
+    'discount',
 
 ]
 
@@ -57,29 +58,11 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://192.168.1.65:5173",
-    "https://the-scarlett-cloud.vercel.app",
-    # Add other allowed origins as needed
+    "http://localhost:3000",
+
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
-# CSRF Settings
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://192.168.1.65:5173",
-    "https://the-scarlett-cloud.vercel.app",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
-
-CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = False
-
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -158,23 +141,28 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'backend.authentication.CsrfExemptSessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'backend.pagination.CustomPageNumberPagination',
     'PAGE_SIZE': 10,
-    'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-    ],
+
 }
+
+# Authentication backends
+AUTHENTICATION_BACKENDS = [
+    # Custom email-only authentication backend
+    'backend.authentication.EmailOnlyBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Keep default as fallback
+]
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "TOKEN_OBTAIN_SERIALIZER": "account.serializers.CustomTokenObtainPairSerializer",
 }
 
 cloudinary.config(
@@ -184,3 +172,24 @@ cloudinary.config(
 )
 
 CLOUDINARY_URL = config('CLOUDINARY_URL')
+
+# Djoser Configuration
+DJOSER = {
+    'SERIALIZERS': {
+        'user': 'account.serializers.CustomUserSerializer',
+        'current_user': 'account.serializers.CustomUserSerializer',
+        'user_create': 'account.serializers.CustomUserCreateSerializer',
+        'token': 'account.serializers.CustomTokenObtainPairSerializer',
+    },
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticated'],
+        'user_list': ['rest_framework.permissions.IsAdminUser'],
+    },
+    'HIDE_USERS': False,  # Set to True to hide user list endpoint
+    'USER_CREATE_PASSWORD_RETYPE': True,
+    'SET_PASSWORD_RETYPE': True,
+    'PASSWORD_RESET_CONFIRM_URL': 'auth/password-reset/{uid}/{token}',
+    'ACTIVATION_URL': 'auth/activation/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': False,  # Set to True if you want email activation
+    'LOGIN_FIELD': 'email',  # Use email as the primary login field
+}

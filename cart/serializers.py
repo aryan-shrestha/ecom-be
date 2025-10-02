@@ -2,49 +2,47 @@ from rest_framework.serializers import ModelSerializer, Serializer, ListField, D
 from rest_framework import serializers
 
 from cart.models import CartItem, Cart
-from Products.models import Product, ProductImages
-from Products.serializers import ProductSerializer
-from Products.serializers import ProductImageSerializer
-from category.serializers import CategorySerializer
+from product.serializers import ProductReadSerializer
 
 
-class CartItemSerializer(ModelSerializer):
-    product = ProductSerializer()
+class CartItemCreateSerializer(ModelSerializer):
+
+    is_checked_out = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = CartItem
         fields = ['id', 'product', 'quantity', 'is_checked_out']
 
+    def create(self, validated_data):
+        request = self.context.get('request')
+        user = request.user if request else None
+        if user and user.is_authenticated:
+            cart, _ = Cart.objects.get_or_create(user=user)
+            product = validated_data['product']
+            quantity = validated_data.get('quantity', 1)
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart, product=product, defaults={'quantity': quantity}
+            )
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
+            cart.update_total()
+            return cart_item
+        return super().create(validated_data)
+
+
+class CartItemReadOnlySerializer(ModelSerializer):
+    product = ProductReadSerializer(read_only=True)
+
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'quantity', 'is_checked_out']
+        read_only_fields = fields
+
 
 class CartSerializer(ModelSerializer):
-    item_count = serializers.SerializerMethodField()
+    items = CartItemReadOnlySerializer(many=True, read_only=True)
 
     class Meta:
         model = Cart
-        fields = ['id', 'date_added', 'total', 'item_count']
-
-    def get_item_count(self, obj):
-        return obj.items.filter(is_checked_out=False).count()
-
-
-class BulkOperationSerializer(Serializer):
-    """Serializer for individual bulk operations"""
-    product_id = IntegerField()
-    action = CharField(max_length=20)  # 'update_quantity' or 'remove'
-    quantity = IntegerField(required=False, min_value=1)
-
-    def validate(self, data):
-        if data['action'] == 'update_quantity' and 'quantity' not in data:
-            raise serializers.ValidationError(
-                "Quantity is required for update_quantity action"
-            )
-        return data
-
-
-class BulkCartOperationSerializer(Serializer):
-    """Serializer for bulk cart operations"""
-    operations = ListField(
-        child=BulkOperationSerializer(),
-        min_length=1,
-        max_length=50  # Limit bulk operations to prevent abuse
-    )
+        fields = ['id', 'date_added', 'total', 'items']

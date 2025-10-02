@@ -1,11 +1,12 @@
-from django.urls import path
-from . import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import UploadedFileViewSet
 
 app_name = 'file_upload'
 
+router = DefaultRouter()
+router.register(r'files', UploadedFileViewSet, basename='uploadedfile')
+
 urlpatterns = [
-    path('', views.get_uploaded_files, name='get_uploaded_files'),
-    path('upload/', views.upload_file, name='upload_file'),
-    path('details/<str:file_id>/', views.get_file_details, name='get_file_details'),
-    path('delete/<str:file_id>/', views.delete_file, name='delete_file'),
+    path('', include(router.urls)),
 ]

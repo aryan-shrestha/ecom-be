@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('Products', '0001_initial'),
+        ('product', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -18,29 +18,38 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Cart',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_key', models.CharField(blank=True, max_length=32, null=True)),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('session_key', models.CharField(
+                    blank=True, max_length=32, null=True)),
                 ('date_added', models.DateField(auto_now_add=True)),
-                ('total', models.DecimalField(decimal_places=2, default=0, max_digits=10)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('total', models.DecimalField(
+                    decimal_places=2, default=0, max_digits=10)),
+                ('user', models.ForeignKey(blank=True, null=True,
+                 on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
         migrations.CreateModel(
             name='CartItem',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('quantity', models.IntegerField(default=0, null=True)),
                 ('is_checked_out', models.BooleanField(default=False)),
-                ('cart', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='items', to='cart.cart')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='Products.product')),
+                ('cart', models.ForeignKey(
+                    null=True, on_delete=django.db.models.deletion.CASCADE, related_name='items', to='cart.cart')),
+                ('product', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='product.product')),
             ],
         ),
         migrations.AddConstraint(
             model_name='cart',
-            constraint=models.UniqueConstraint(condition=models.Q(('user__isnull', False)), fields=('user',), name='unique_user_cart'),
+            constraint=models.UniqueConstraint(condition=models.Q(
+                ('user__isnull', False)), fields=('user',), name='unique_user_cart'),
         ),
         migrations.AddConstraint(
             model_name='cart',
-            constraint=models.UniqueConstraint(condition=models.Q(('session_key__isnull', False), ('user__isnull', True)), fields=('session_key',), name='unique_session_cart'),
+            constraint=models.UniqueConstraint(condition=models.Q(('session_key__isnull', False), (
+                'user__isnull', True)), fields=('session_key',), name='unique_session_cart'),
         ),
     ]

@@ -17,17 +17,20 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Product',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=255)),
                 ('slug', models.CharField(max_length=255, unique=True)),
                 ('description', models.TextField()),
                 ('og_price', models.FloatField()),
                 ('dis_price', models.FloatField(blank=True, null=True)),
                 ('stock', models.IntegerField(default=0)),
-                ('dis_percentage', models.DecimalField(decimal_places=0, editable=False, max_digits=10, null=True)),
+                ('dis_percentage', models.DecimalField(
+                    decimal_places=0, editable=False, max_digits=10, null=True)),
                 ('created_at', models.DateField(auto_now_add=True)),
                 ('modified_at', models.DateField(auto_now=True)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='products', to='category.category')),
+                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='products', to='category.category')),
             ],
             options={
                 'verbose_name': 'Product',
@@ -37,9 +40,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ProductImages',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('image', cloudinary.models.CloudinaryField(max_length=255, verbose_name='image')),
-                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='images', to='Products.product')),
+                ('id', models.BigAutoField(auto_created=True,
+                 primary_key=True, serialize=False, verbose_name='ID')),
+                ('image', cloudinary.models.CloudinaryField(
+                    max_length=255, verbose_name='image')),
+                ('product', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                 related_name='images', to='product.product')),
             ],
             options={
                 'verbose_name': 'Product Image',
