@@ -124,6 +124,20 @@ def require_permission(permission_code: str):
     return permission_checker
 
 
+def get_refresh_token_cookie(
+    refresh_token: Annotated[Optional[str], Cookie()] = None,
+) -> Optional[str]:
+    """Extract refresh token from cookie."""
+    return refresh_token
+
+
+def get_csrf_token_cookie(
+    csrf_token: Annotated[Optional[str], Cookie()] = None,
+) -> Optional[str]:
+    """Extract CSRF token from cookie."""
+    return csrf_token
+
+
 def verify_csrf_token(
     x_csrf_token: Annotated[Optional[str], Header(alias="X-CSRF-Token")] = None,
     csrf_token: Annotated[Optional[str], Cookie()] = None,

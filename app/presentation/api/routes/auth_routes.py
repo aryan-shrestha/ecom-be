@@ -23,7 +23,12 @@ from app.domain.errors.domain_errors import (
     UserNotActiveError,
 )
 from app.infrastructure.db.sqlalchemy.session import get_session
-from app.presentation.api.deps.auth_deps import get_current_principal, verify_csrf_token
+from app.presentation.api.deps.auth_deps import (
+    get_csrf_token_cookie,
+    get_current_principal,
+    get_refresh_token_cookie,
+    verify_csrf_token,
+)
 from app.presentation.api.deps.container import Container, get_container
 from app.presentation.api.schemas.http_auth_schemas import (
     ChangePasswordRequestSchema,
@@ -116,8 +121,8 @@ async def login(
 async def refresh(
     request: Request,
     response: Response,
-    refresh_token: str = Depends(lambda r: r.cookies.get("refresh_token")),
-    csrf_token: str = Depends(lambda r: r.cookies.get("csrf_token")),
+    refresh_token: str = Depends(get_refresh_token_cookie),
+    csrf_token: str = Depends(get_csrf_token_cookie),
     session: AsyncSession = Depends(get_session),
     container: Container = Depends(get_container),
 ) -> RefreshResponseSchema:
@@ -182,8 +187,8 @@ async def refresh(
 @router.post("/logout", response_model=MessageResponseSchema, dependencies=[Depends(verify_csrf_token)])
 async def logout(
     response: Response,
-    refresh_token: str = Depends(lambda r: r.cookies.get("refresh_token")),
-    csrf_token: str = Depends(lambda r: r.cookies.get("csrf_token")),
+    refresh_token: str = Depends(get_refresh_token_cookie),
+    csrf_token: str = Depends(get_csrf_token_cookie),
     session: AsyncSession = Depends(get_session),
     container: Container = Depends(get_container),
 ) -> MessageResponseSchema:
