@@ -1,0 +1,127 @@
+"""Get product admin detail use case."""
+
+from uuid import UUID
+
+from app.application.dto.product_dto import (
+    ProductDetailResponse,
+    ProductDTO,
+    VariantDTO,
+    ProductImageDTO,
+    CategoryDTO,
+    InventoryDTO,
+    MoneyDTO,
+)
+from app.application.errors.app_errors import ResourceNotFoundError
+from app.application.interfaces.uow import UnitOfWork
+
+
+class GetProductAdminUseCase:
+    """Use case for getting product detail (admin)."""
+
+    def __init__(self, uow: UnitOfWork) -> None:
+        self.uow = uow
+
+    async def execute(self, product_id: UUID) -> ProductDetailResponse:
+        """
+        Get product with full details (admin view).
+        
+        Raises:
+            ResourceNotFoundError: If product not found
+        """
+        async with self.uow:
+            # Get product
+            product = await self.uow.products.get_by_id(product_id)
+            if not product:
+                raise ResourceNotFoundError(f"Product {product_id} not found")
+
+            # Get variants
+            variants = await self.uow.products.get_variants_for_product(product_id)
+
+            # Get images
+            images = await self.uow.products.get_images_for_product(product_id)
+
+            # Get categories
+            category_ids = await self.uow.products.get_category_ids_for_product(product_id)
+            categories = []
+            for cat_id in category_ids:
+                cat = await self.uow.categories.get_by_id(cat_id)
+                if cat:
+                    categories.append(cat)
+
+            # Get inventory for variants
+            inventory_map = {}
+            for variant in variants:
+                inv = await self.uow.inventory.get_by_variant_id(variant.id)
+                if inv:
+                    inventory_map[variant.id] = InventoryDTO(
+                        variant_id=inv.variant_id,
+                        on_hand=inv.on_hand,
+                        reserved=inv.reserved,
+                        allow_backorder=inv.allow_backorder,
+                    )
+
+            # Build response
+            return ProductDetailResponse(
+                product=ProductDTO(
+                    id=product.id,
+                    status=product.status.value,
+                    name=product.name,
+                    slug=str(product.slug),
+                    description_short=product.description_short,
+                    description_long=product.description_long,
+                    tags=product.tags,
+                    featured=product.featured,
+                    sort_order=product.sort_order,
+                    created_at=product.created_at,
+                    updated_at=product.updated_at,
+                    created_by=product.created_by,
+                    updated_by=product.updated_by,
+                ),
+                variants=[
+                    VariantDTO(
+                        id=v.id,
+                        product_id=v.product_id,
+                        sku=str(v.sku),
+                        barcode=v.barcode,
+                        status=v.status.value,
+                        price=MoneyDTO(amount=v.price.amount, currency=v.price.currency),
+                        compare_at_price=(
+                            MoneyDTO(amount=v.compare_at_price.amount, currency=v.compare_at_price.currency)
+                            if v.compare_at_price
+                            else None
+                        ),
+                        cost=(
+                            MoneyDTO(amount=v.cost.amount, currency=v.cost.currency) if v.cost else None
+                        ),
+                        weight=v.weight,
+                        length=v.length,
+                        width=v.width,
+                        height=v.height,
+                        is_default=v.is_default,
+                        created_at=v.created_at,
+                        updated_at=v.updated_at,
+                    )
+                    for v in variants
+                ],
+                images=[
+                    ProductImageDTO(
+                        id=img.id,
+                        product_id=img.product_id,
+                        url=img.url,
+                        alt_text=img.alt_text,
+                        position=img.position,
+                        created_at=img.created_at,
+                    )
+                    for img in images
+                ],
+                categories=[
+                    CategoryDTO(
+                        id=cat.id,
+                        name=cat.name,
+                        slug=str(cat.slug),
+                        parent_id=cat.parent_id,
+                    )
+                    for cat in categories
+                ],
+                inventory_map=inventory_map,
+            )

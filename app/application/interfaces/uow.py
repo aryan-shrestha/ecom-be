@@ -7,6 +7,9 @@ from app.domain.repositories.auth_repository import AuthRepository
 from app.domain.repositories.rbac_repository import RbacRepository
 from app.domain.repositories.refresh_token_repository import RefreshTokenRepository
 from app.domain.repositories.user_repository import UserRepository
+from app.domain.repositories.product_repository import ProductRepository
+from app.domain.repositories.category_repository import CategoryRepository
+from app.domain.repositories.inventory_repository import InventoryRepository
 
 
 class UnitOfWork(ABC):
@@ -20,6 +23,9 @@ class UnitOfWork(ABC):
     auth: AuthRepository
     refresh_tokens: RefreshTokenRepository
     rbac: RbacRepository
+    products: ProductRepository
+    categories: CategoryRepository
+    inventory: InventoryRepository
 
     @abstractmethod
     async def __aenter__(self) -> "UnitOfWork":

@@ -11,6 +11,9 @@ from app.presentation.api.middleware.error_handler import error_handler_middlewa
 from app.presentation.api.middleware.rate_limit import rate_limit_middleware
 from app.presentation.api.routes.auth_routes import router as auth_router
 from app.presentation.api.routes.rbac_routes import router as rbac_router
+from app.presentation.api.routes.admin_product_routes import router as admin_product_router
+from app.presentation.api.routes.storefront_product_routes import router as storefront_product_router
+from app.presentation.api.routes.admin_category_routes import router as admin_category_router
 from config.settings import settings
 
 # Configure logging
@@ -44,6 +47,9 @@ app.middleware("http")(error_handler_middleware)
 # Include routers
 app.include_router(auth_router)
 app.include_router(rbac_router)
+app.include_router(admin_product_router)
+app.include_router(storefront_product_router)
+app.include_router(admin_category_router)
 
 
 @app.on_event("startup")

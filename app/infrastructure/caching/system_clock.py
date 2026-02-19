@@ -9,5 +9,5 @@ class SystemClock(ClockPort):
     """Real system clock implementation."""
 
     def now(self) -> datetime:
-        """Get current UTC datetime."""
+        """Get current UTC datetime (naive, for consistency with DB)."""
         return datetime.now(timezone.utc).replace(tzinfo=None)

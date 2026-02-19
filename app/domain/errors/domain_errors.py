@@ -55,3 +55,50 @@ class RoleNotFoundError(DomainError):
 
 class PermissionNotFoundError(DomainError):
     """Raised when permission cannot be found."""
+
+
+# Product-related errors
+
+
+class ProductNotFoundError(DomainError):
+    """Raised when product cannot be found."""
+
+
+class ProductAlreadyExistsError(DomainError):
+    """Raised when product with same slug already exists."""
+
+
+class ProductPublishError(DomainError):
+    """Raised when product cannot be published."""
+
+
+class VariantNotFoundError(DomainError):
+    """Raised when product variant cannot be found."""
+
+
+class VariantAlreadyExistsError(DomainError):
+    """Raised when variant with same SKU already exists."""
+
+
+class CategoryNotFoundError(DomainError):
+    """Raised when category cannot be found."""
+
+
+class CategoryAlreadyExistsError(DomainError):
+    """Raised when category with same slug already exists."""
+
+
+class InventoryNotFoundError(DomainError):
+    """Raised when inventory record cannot be found."""
+
+
+class InsufficientStockError(DomainError):
+    """Raised when requested quantity exceeds available stock."""
+
+
+class InvalidStockAdjustmentError(DomainError):
+    """Raised when stock adjustment is invalid."""
+
+
+class ImageNotFoundError(DomainError):
+    """Raised when product image cannot be found."""

@@ -11,6 +11,9 @@ from app.infrastructure.repositories.sqlalchemy.refresh_token_repo import (
     SqlAlchemyRefreshTokenRepository,
 )
 from app.infrastructure.repositories.sqlalchemy.user_repo import SqlAlchemyUserRepository
+from app.infrastructure.repositories.sqlalchemy.product_repo import SqlAlchemyProductRepository
+from app.infrastructure.repositories.sqlalchemy.category_repo import SqlAlchemyCategoryRepository
+from app.infrastructure.repositories.sqlalchemy.inventory_repo import SqlAlchemyInventoryRepository
 
 
 class SqlAlchemyUnitOfWork(UnitOfWork):
@@ -22,6 +25,9 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.auth = SqlAlchemyAuthRepository(session)
         self.refresh_tokens = SqlAlchemyRefreshTokenRepository(session)
         self.rbac = SqlAlchemyRbacRepository(session)
+        self.products = SqlAlchemyProductRepository(session)
+        self.categories = SqlAlchemyCategoryRepository(session)
+        self.inventory = SqlAlchemyInventoryRepository(session)
 
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         """Enter transaction context."""

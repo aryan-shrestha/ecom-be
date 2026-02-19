@@ -1,11 +1,12 @@
 """JWT service implementation using PyJWT with RS256."""
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta, timezone
 from typing import Any
 
 import jwt
 
+from app.application.ports.clock_port import ClockPort
 from app.application.ports.jwt_port import JwtPort
 
 
@@ -21,6 +22,7 @@ class JwtService(JwtPort):
         audience: str,
         kid: str,
         access_token_ttl_minutes: int,
+        clock: ClockPort,
     ) -> None:
         self.private_key = private_key
         self.public_key = public_key
@@ -29,14 +31,17 @@ class JwtService(JwtPort):
         self.audience = audience
         self.kid = kid
         self.access_token_ttl_minutes = access_token_ttl_minutes
+        self.clock = clock
 
     def issue_access_token(
         self, user_id: uuid.UUID, roles: list[str], token_version: int
     ) -> str:
         """Issue a new access JWT token."""
-        now = datetime.utcnow()
+        now = self.clock.now()
         exp = now + timedelta(minutes=self.access_token_ttl_minutes)
 
+        # Convert naive UTC datetime to timestamp
+        # clock.now() returns naive datetime representing UTC, so we add timezone info
         claims = {
             "sub": str(user_id),
             "roles": roles,
@@ -44,8 +49,8 @@ class JwtService(JwtPort):
             "jti": str(uuid.uuid4()),
             "iss": self.issuer,
             "aud": self.audience,
-            "iat": int(now.timestamp()),
-            "exp": int(exp.timestamp()),
+            "iat": int(now.replace(tzinfo=timezone.utc).timestamp()),
+            "exp": int(exp.replace(tzinfo=timezone.utc).timestamp()),
         }
 
         headers = {"kid": self.kid}
