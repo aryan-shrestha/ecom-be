@@ -1,7 +1,20 @@
 """File storage port."""
 
 from abc import ABC, abstractmethod
-from typing import BinaryIO
+from dataclasses import dataclass
+from typing import BinaryIO, Optional
+
+
+@dataclass
+class ImageUploadResult:
+    """Result of image upload operation."""
+
+    url: str
+    public_id: Optional[str]
+    bytes_size: int
+    width: int
+    height: int
+    format: str
 
 
 class FileStoragePort(ABC):
@@ -23,8 +36,35 @@ class FileStoragePort(ABC):
         ...
 
     @abstractmethod
+    async def upload_image(
+        self,
+        file_data: bytes,
+        filename: str,
+        folder: str = "",
+        content_type: Optional[str] = None,
+    ) -> ImageUploadResult:
+        """
+        Upload image to storage with metadata extraction.
+        
+        Args:
+            file_data: Image file bytes
+            filename: Original filename
+            folder: Folder/prefix to store in
+            content_type: MIME type of image
+            
+        Returns:
+            ImageUploadResult with URL and metadata
+        """
+        ...
+
+    @abstractmethod
     async def delete_file(self, file_path: str) -> None:
         """Delete file from storage."""
+        ...
+
+    @abstractmethod
+    async def delete_by_public_id(self, public_id: str) -> None:
+        """Delete file by provider public ID (for cloud providers)."""
         ...
 
     @abstractmethod

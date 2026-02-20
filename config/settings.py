@@ -55,10 +55,36 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False)
     log_level: str = Field(default="INFO")
 
+    # File Storage / Cloudinary
+    cloudinary_url: Optional[str] = Field(
+        default=None,
+        description="Cloudinary URL (cloudinary://API_KEY:API_SECRET@CLOUD_NAME)"
+    )
+    cloudinary_folder_prefix: str = Field(
+        default="ecom/dev",
+        description="Folder prefix for uploads in Cloudinary"
+    )
+    max_image_bytes: int = Field(
+        default=5 * 1024 * 1024,  # 5MB
+        description="Maximum image file size in bytes"
+    )
+    allowed_image_mime_types: list[str] = Field(
+        default=["image/jpeg", "image/png", "image/webp"],
+        description="Allowed MIME types for image uploads"
+    )
+
+    @field_validator("allowed_image_mime_types", mode="before")
+    @classmethod
+    def parse_allowed_mime_types(cls, v: str | list[str]) -> list[str]:
+        """Parse allowed MIME types from list."""
+        if isinstance(v, str):
+            return [mime.strip() for mime in v.split(",")]
+        return v
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Parse CORS origins from comma-separated string or list."""
+        """Parse CORS origins from list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v

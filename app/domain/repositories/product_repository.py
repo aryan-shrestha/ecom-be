@@ -7,6 +7,7 @@ from uuid import UUID
 from app.domain.entities.product import Product, ProductStatus
 from app.domain.entities.product_variant import ProductVariant
 from app.domain.entities.product_image import ProductImage
+from app.domain.entities.variant_image import VariantImage
 from app.domain.value_objects.slug import Slug
 
 
@@ -143,4 +144,31 @@ class ProductRepository(ABC):
     @abstractmethod
     async def assign_categories(self, product_id: UUID, category_ids: list[UUID]) -> None:
         """Assign categories to product (replaces existing)."""
+        ...
+
+    # Variant image operations
+
+    @abstractmethod
+    async def get_variant_image_by_id(self, image_id: UUID) -> Optional[VariantImage]:
+        """Retrieve variant image by ID."""
+        ...
+
+    @abstractmethod
+    async def get_images_for_variant(self, variant_id: UUID) -> list[VariantImage]:
+        """Get all images for a variant, ordered by position."""
+        ...
+
+    @abstractmethod
+    async def save_variant_image(self, image: VariantImage) -> VariantImage:
+        """Save new variant image."""
+        ...
+
+    @abstractmethod
+    async def update_variant_image(self, image: VariantImage) -> VariantImage:
+        """Update existing variant image."""
+        ...
+
+    @abstractmethod
+    async def delete_variant_image(self, image_id: UUID) -> None:
+        """Delete variant image."""
         ...

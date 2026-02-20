@@ -1,4 +1,4 @@
-"""Product image SQLAlchemy model."""
+"""Variant image SQLAlchemy model."""
 
 import uuid
 from datetime import datetime
@@ -11,15 +11,15 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.infrastructure.db.sqlalchemy.base import Base
 
 
-class ProductImageModel(Base):
-    """Product image ORM model."""
+class VariantImageModel(Base):
+    """Variant image ORM model."""
 
-    __tablename__ = "product_images"
+    __tablename__ = "variant_images"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    product_id: Mapped[uuid.UUID] = mapped_column(
+    variant_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("products.id", ondelete="CASCADE"),
+        ForeignKey("product_variants.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )

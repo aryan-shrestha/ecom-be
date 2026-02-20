@@ -8,16 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.product import Product, ProductStatus
 from app.domain.entities.product_image import ProductImage
+from app.domain.entities.variant_image import VariantImage
 from app.domain.entities.product_variant import ProductVariant
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.value_objects.slug import Slug
 from app.infrastructure.db.sqlalchemy.models.product_category_model import ProductCategoryModel
 from app.infrastructure.db.sqlalchemy.models.product_image_model import ProductImageModel
+from app.infrastructure.db.sqlalchemy.models.variant_image_model import VariantImageModel
 from app.infrastructure.db.sqlalchemy.models.product_model import ProductModel
 from app.infrastructure.db.sqlalchemy.models.product_variant_model import ProductVariantModel
 from app.infrastructure.mappers.product_mapper import ProductMapper
 from app.infrastructure.mappers.variant_mapper import VariantMapper
-from app.infrastructure.mappers.image_mapper import ImageMapper
+from app.infrastructure.mappers.image_mapper import ImageMapper, VariantImageMapper
 
 
 class SqlAlchemyProductRepository(ProductRepository):
@@ -248,4 +250,45 @@ class SqlAlchemyProductRepository(ProductRepository):
             assoc = ProductCategoryModel(product_id=product_id, category_id=category_id)
             self.session.add(assoc)
 
+        await self.session.flush()
+    # Variant image operations
+
+    async def get_variant_image_by_id(self, image_id: UUID) -> Optional[VariantImage]:
+        """Retrieve variant image by ID."""
+        stmt = select(VariantImageModel).where(VariantImageModel.id == image_id)
+        result = await self.session.execute(stmt)
+        model = result.scalar_one_or_none()
+        return VariantImageMapper.to_entity(model) if model else None
+
+    async def get_images_for_variant(self, variant_id: UUID) -> list[VariantImage]:
+        """Get all images for a variant, ordered by position."""
+        stmt = (
+            select(VariantImageModel)
+            .where(VariantImageModel.variant_id == variant_id)
+            .order_by(VariantImageModel.position)
+        )
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+        return [VariantImageMapper.to_entity(model) for model in models]
+
+    async def save_variant_image(self, image: VariantImage) -> VariantImage:
+        """Save new variant image."""
+        model = VariantImageMapper.to_model(image)
+        self.session.add(model)
+        await self.session.flush()
+        return VariantImageMapper.to_entity(model)
+
+    async def update_variant_image(self, image: VariantImage) -> VariantImage:
+        """Update existing variant image."""
+        stmt = select(VariantImageModel).where(VariantImageModel.id == image.id)
+        result = await self.session.execute(stmt)
+        model = result.scalar_one()
+        VariantImageMapper.update_model(model, image)
+        await self.session.flush()
+        return VariantImageMapper.to_entity(model)
+
+    async def delete_variant_image(self, image_id: UUID) -> None:
+        """Delete variant image."""
+        stmt = delete(VariantImageModel).where(VariantImageModel.id == image_id)
+        await self.session.execute(stmt)
         await self.session.flush()

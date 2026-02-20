@@ -100,5 +100,21 @@ class InvalidStockAdjustmentError(DomainError):
     """Raised when stock adjustment is invalid."""
 
 
+class ImageValidationError(DomainError):
+    """Raised when image validation fails."""
+
+
+class InvalidImageFormatError(DomainError):
+    """Raised when image format is not allowed."""
+
+
+class ImageTooLargeError(DomainError):
+    """Raised when image file size exceeds limit."""
+
+
+class ImageNotFoundError(DomainError):
+    """Raised when image cannot be found."""
+
+
 class ImageNotFoundError(DomainError):
     """Raised when product image cannot be found."""

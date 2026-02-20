@@ -3,7 +3,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dto.product_dto import (
@@ -15,12 +15,16 @@ from app.application.dto.product_dto import (
     AddProductImageRequest,
     ReorderImagesRequest,
     AssignCategoriesRequest,
+    UploadProductImageRequest,
+    UploadVariantImageRequest,
 )
 from app.application.dto.principal_dto import PrincipalDTO
 from app.application.errors.app_errors import (
     ConflictError,
     ResourceNotFoundError,
     ValidationError,
+    ImageUploadError,
+    ImageProcessingError,
 )
 from app.infrastructure.db.sqlalchemy.session import get_session
 from app.presentation.api.deps.auth_deps import get_current_principal, require_permission
@@ -34,6 +38,7 @@ from app.presentation.api.schemas.http_product_schemas import (
     VariantResponseSchema,
     AdjustStockRequestSchema,
     StockMovementResponseSchema,
+    VariantImageResponseSchema,
     AddProductImageRequestSchema,
     ProductImageResponseSchema,
     ReorderImagesRequestSchema,
@@ -538,6 +543,71 @@ async def deactivate_variant(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+# Variant image endpoints
+
+
+@router.post(
+    "/variants/{variant_id}/images/upload",
+    response_model=VariantImageResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("products:media_write"))],
+)
+async def upload_variant_image(
+    variant_id: UUID,
+    file: UploadFile = File(...),
+    alt_text: Optional[str] = Form(None),
+    position: Optional[int] = Form(None),
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> VariantImageResponseSchema:
+    """Upload image file to variant (multipart/form-data)."""
+    # Validate content type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid content type: {file.content_type}. Must be an image.",
+        )
+
+    # Read file data
+    file_data = await file.read()
+
+    use_case = container.get_upload_variant_image_use_case(session)
+
+    try:
+        request = UploadVariantImageRequest(
+            variant_id=variant_id,
+            file_data=file_data,
+            filename=file.filename or "image",
+            content_type=file.content_type,
+            alt_text=alt_text,
+            position=position,
+            uploaded_by=principal.user_id,
+        )
+        result = await use_case.execute(request)
+
+        return VariantImageResponseSchema(
+            id=result.id,
+            variant_id=result.variant_id,
+            url=result.url,
+            alt_text=result.alt_text,
+            position=result.position,
+            created_at=result.created_at,
+            provider=result.provider,
+            provider_public_id=result.provider_public_id,
+            bytes_size=result.bytes_size,
+            width=result.width,
+            height=result.height,
+            format=result.format,
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except (ValidationError, ImageProcessingError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except ImageUploadError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
 # Stock adjustment endpoint
 
 
@@ -596,7 +666,7 @@ async def add_product_image(
     session: AsyncSession = Depends(get_session),
     container: Container = Depends(get_container),
 ) -> ProductImageResponseSchema:
-    """Add image to product."""
+    """Add image to product (from URL)."""
     use_case = container.get_add_product_image_use_case(session)
 
     try:
@@ -614,9 +684,78 @@ async def add_product_image(
             alt_text=result.alt_text,
             position=result.position,
             created_at=result.created_at,
+            provider=result.provider,
+            provider_public_id=result.provider_public_id,
+            bytes_size=result.bytes_size,
+            width=result.width,
+            height=result.height,
+            format=result.format,
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post(
+    "/{product_id}/images/upload",
+    response_model=ProductImageResponseSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("products:media_write"))],
+)
+async def upload_product_image(
+    product_id: UUID,
+    file: UploadFile = File(...),
+    alt_text: Optional[str] = Form(None),
+    position: Optional[int] = Form(None),
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> ProductImageResponseSchema:
+    """Upload image file to product (multipart/form-data)."""
+    # Validate content type
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid content type: {file.content_type}. Must be an image.",
+        )
+
+    # Read file data
+    file_data = await file.read()
+
+    use_case = container.get_upload_product_image_use_case(session)
+
+    try:
+        request = UploadProductImageRequest(
+            product_id=product_id,
+            file_data=file_data,
+            filename=file.filename or "image",
+            content_type=file.content_type,
+            alt_text=alt_text,
+            position=position,
+            uploaded_by=principal.user_id,
+        )
+        result = await use_case.execute(request)
+
+        return ProductImageResponseSchema(
+            id=result.id,
+            product_id=result.product_id,
+            url=result.url,
+            alt_text=result.alt_text,
+            position=result.position,
+            created_at=result.created_at,
+            provider=result.provider,
+            provider_public_id=result.provider_public_id,
+            bytes_size=result.bytes_size,
+            width=result.width,
+            height=result.height,
+            format=result.format,
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except (ValidationError, ImageProcessingError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except ImageUploadError as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 
 
 @router.delete(

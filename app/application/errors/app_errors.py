@@ -35,3 +35,11 @@ class ResourceNotFoundError(ApplicationError):
 
 class ConflictError(ApplicationError):
     """Raised when operation conflicts with current state."""
+
+
+class ImageUploadError(ApplicationError):
+    """Raised when image upload fails."""
+
+
+class ImageProcessingError(ApplicationError):
+    """Raised when image processing/validation fails."""

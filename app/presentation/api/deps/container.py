@@ -9,6 +9,7 @@ from app.application.ports.audit_log_port import AuditLogPort
 from app.application.ports.cache_port import CachePort
 from app.application.ports.clock_port import ClockPort
 from app.application.ports.crypto_port import PasswordHasherPort, TokenHasherPort
+from app.application.ports.file_storage_port import FileStoragePort
 from app.application.ports.jwt_port import JwtPort
 from app.application.use_cases.auth.change_password import ChangePasswordUseCase
 from app.application.use_cases.auth.login import LoginUseCase
@@ -27,6 +28,8 @@ from app.application.use_cases.products.update_variant import UpdateVariantUseCa
 from app.application.use_cases.products.deactivate_variant import DeactivateVariantUseCase
 from app.application.use_cases.products.adjust_stock import AdjustStockUseCase
 from app.application.use_cases.products.add_product_image import AddProductImageUseCase
+from app.application.use_cases.products.upload_product_image import UploadProductImageUseCase
+from app.application.use_cases.products.upload_variant_image import UploadVariantImageUseCase
 from app.application.use_cases.products.remove_product_image import RemoveProductImageUseCase
 from app.application.use_cases.products.reorder_product_images import ReorderProductImagesUseCase
 from app.application.use_cases.products.assign_categories import AssignCategoriesUseCase
@@ -40,6 +43,8 @@ from app.infrastructure.caching.memory_cache import MemoryCache
 from app.infrastructure.caching.system_clock import SystemClock
 from app.infrastructure.observability.audit_logger import StructuredAuditLogger
 from app.infrastructure.security.jwt_service import JwtService
+from app.infrastructure.storage.cloudinary_storage import CloudinaryStorage
+from app.infrastructure.storage.local_file_storage import LocalFileStorage
 from app.infrastructure.security.password_hasher import Argon2PasswordHasher
 from app.infrastructure.security.token_hasher import HmacTokenHasher
 from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
@@ -63,9 +68,22 @@ class Container:
             issuer=settings.jwt_issuer,
             audience=settings.jwt_audience,
             kid=settings.jwt_active_kid,
-            access_token_ttl_minutes=settings.jwt_access_token_ttl_minutes,
+            access_token_ttl_minutes=settings.jwt_access_token_ttl_minutes)
+
+        # File storage - Use Cloudinary if configured, otherwise local
+        if settings.cloudinary_url:
+            self._file_storage: FileStoragePort = CloudinaryStorage(
+                cloudinary_url=settings.cloudinary_url,
+                folder_prefix=settings.cloudinary_folder_prefix,
+            )
+        else:
+            # Fallback to local storage (for development/testing)
+            self._file_storage: FileStoragePort = LocalFileStorage(
+                base_path="./storage/uploads",
+                base_url="/storage/uploads",
+            )
             clock=self._clock,
-        )
+        
         self._audit_log: AuditLogPort = StructuredAuditLogger()
         self._cache: CachePort = MemoryCache()
 
@@ -92,6 +110,10 @@ class Container:
     def get_cache(self) -> CachePort:
         """Get cache."""
         return self._cache
+
+    def get_file_storage(self) -> FileStoragePort:
+        """Get file storage."""
+        return self._file_storage
 
     def get_uow(self, session: AsyncSession) -> UnitOfWork:
         """Get Unit of Work."""
@@ -248,6 +270,28 @@ class Container:
             clock=self._clock,
             audit_log=self._audit_log,
             cache=self._cache,
+        )
+
+    def get_upload_product_image_use_case(self, session: AsyncSession) -> UploadProductImageUseCase:
+        """Get UploadProductImageUseCase."""
+        return UploadProductImageUseCase(
+            uow=self.get_uow(session),
+            file_storage=self._file_storage,
+            clock=self._clock,
+            audit_log=self._audit_log,
+            cache=self._cache,
+            max_image_bytes=settings.max_image_bytes,
+        )
+
+    def get_upload_variant_image_use_case(self, session: AsyncSession) -> UploadVariantImageUseCase:
+        """Get UploadVariantImageUseCase."""
+        return UploadVariantImageUseCase(
+            uow=self.get_uow(session),
+            file_storage=self._file_storage,
+            clock=self._clock,
+            audit_log=self._audit_log,
+            cache=self._cache,
+            max_image_bytes=settings.max_image_bytes,
         )
 
     def get_remove_product_image_use_case(self, session: AsyncSession) -> RemoveProductImageUseCase:

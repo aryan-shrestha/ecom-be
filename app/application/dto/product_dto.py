@@ -97,6 +97,30 @@ class ProductImageDTO:
     alt_text: Optional[str]
     position: int
     created_at: datetime
+    provider: Optional[str] = None
+    provider_public_id: Optional[str] = None
+    bytes_size: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    format: Optional[str] = None
+
+
+@dataclass
+class VariantImageDTO:
+    """Variant image data transfer object."""
+
+    id: UUID
+    variant_id: UUID
+    url: str
+    alt_text: Optional[str]
+    position: int
+    created_at: datetime
+    provider: Optional[str] = None
+    provider_public_id: Optional[str] = None
+    bytes_size: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    format: Optional[str] = None
 
 
 # Request DTOs
@@ -265,3 +289,32 @@ class StorefrontProductDTO:
     description_long: Optional[str]
     tags: list[str]
     featured: bool
+
+
+# Image upload requests
+
+
+@dataclass
+class UploadProductImageRequest:
+    """Request to upload product image."""
+
+    product_id: UUID
+    file_data: bytes
+    filename: str
+    content_type: str
+    alt_text: Optional[str] = None
+    position: Optional[int] = None
+    uploaded_by: Optional[UUID] = None
+
+
+@dataclass
+class UploadVariantImageRequest:
+    """Request to upload variant image."""
+
+    variant_id: UUID
+    file_data: bytes
+    filename: str
+    content_type: str
+    alt_text: Optional[str] = None
+    position: Optional[int] = None
+    uploaded_by: Optional[UUID] = None

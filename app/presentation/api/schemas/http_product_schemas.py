@@ -200,6 +200,29 @@ class ProductImageResponseSchema(BaseModel):
     alt_text: Optional[str]
     position: int
     created_at: datetime
+    provider: Optional[str] = None
+    provider_public_id: Optional[str] = None
+    bytes_size: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    format: Optional[str] = None
+
+
+class VariantImageResponseSchema(BaseModel):
+    """Variant image response."""
+
+    id: UUID
+    variant_id: UUID
+    url: str
+    alt_text: Optional[str]
+    position: int
+    created_at: datetime
+    provider: Optional[str] = None
+    provider_public_id: Optional[str] = None
+    bytes_size: Optional[int] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    format: Optional[str] = None
 
 
 class ReorderImagesRequestSchema(BaseModel):

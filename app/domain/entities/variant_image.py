@@ -1,4 +1,4 @@
-"""Product image domain entity."""
+"""Variant image domain entity."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,11 +7,11 @@ from uuid import UUID
 
 
 @dataclass(frozen=True)
-class ProductImage:
-    """Product image entity."""
+class VariantImage:
+    """Variant image entity."""
 
     id: UUID
-    product_id: UUID
+    variant_id: UUID
     url: str
     alt_text: Optional[str]
     position: int
@@ -46,11 +46,11 @@ class ProductImage:
         if self.format and len(self.format) > 20:
             raise ValueError("Format cannot exceed 20 characters")
 
-    def update_position(self, position: int) -> "ProductImage":
+    def update_position(self, position: int) -> "VariantImage":
         """Return new image with updated position."""
-        return ProductImage(
+        return VariantImage(
             id=self.id,
-            product_id=self.product_id,
+            variant_id=self.variant_id,
             url=self.url,
             alt_text=self.alt_text,
             position=position,
