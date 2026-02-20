@@ -182,7 +182,7 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
     )
     product_id = create_response.json()["id"]
 
-    # Add variant
+    # Add variant with dimensions
     response = await client.post(
         f"/admin/products/{product_id}/variants",
         json={
@@ -192,7 +192,10 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
             "price_currency": "USD",
             "compare_at_price_amount": 2499,
             "compare_at_price_currency": "USD",
-            "weight_grams": 500,
+            "weight": 500,
+            "length": 100,
+            "width": 50,
+            "height": 25,
             "is_default": True,
         },
         headers=auth_headers,
@@ -204,6 +207,10 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
     assert data["status"] == "ACTIVE"
     assert data["price"]["amount"] == 1999
     assert data["price"]["currency"] == "USD"
+    assert data["weight"] == 500
+    assert data["length"] == 100
+    assert data["width"] == 50
+    assert data["height"] == 25
     assert data["is_default"] is True
 
 
@@ -608,4 +615,81 @@ async def test_assign_categories_to_product(client: AsyncClient, auth_headers: d
     )
 
     assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_get_product_with_variants_and_dimensions(client: AsyncClient, auth_headers: dict):
+    """Test GET /admin/products/{product_id} returns variants with dimensions correctly."""
+    # Create product
+    create_response = await client.post(
+        "/admin/products",
+        json={"name": "Product with Variants", "slug": "product-with-variants"},
+        headers=auth_headers,
+    )
+    product_id = create_response.json()["id"]
+
+    # Add variant with full dimensions
+    variant_response = await client.post(
+        f"/admin/products/{product_id}/variants",
+        json={
+            "sku": "VARIANT-001",
+            "barcode": "9876543210",
+            "price_amount": 2999,
+            "price_currency": "USD",
+            "weight": 750,
+            "length": 150,
+            "width": 100,
+            "height": 50,
+            "is_default": True,
+        },
+        headers=auth_headers,
+    )
+    assert variant_response.status_code == 201
+
+    # Add second variant with partial dimensions
+    variant2_response = await client.post(
+        f"/admin/products/{product_id}/variants",
+        json={
+            "sku": "VARIANT-002",
+            "price_amount": 1999,
+            "price_currency": "USD",
+            "weight": 500,
+            "is_default": False,
+        },
+        headers=auth_headers,
+    )
+    assert variant2_response.status_code == 201
+
+    # Get product detail
+    response = await client.get(f"/admin/products/{product_id}", headers=auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+
+    # Verify product details
+    assert data["product"]["id"] == product_id
+    assert data["product"]["name"] == "Product with Variants"
+    assert data["product"]["slug"] == "product-with-variants"
+
+    # Verify variants are returned
+    assert "variants" in data
+    assert len(data["variants"]) == 2
+
+    # Find and verify first variant (full dimensions)
+    variant1 = next(v for v in data["variants"] if v["sku"] == "VARIANT-001")
+    assert variant1["weight"] == 750
+    assert variant1["length"] == 150
+    assert variant1["width"] == 100
+    assert variant1["height"] == 50
+    assert variant1["barcode"] == "9876543210"
+    assert variant1["is_default"] is True
+
+    # Find and verify second variant (partial dimensions)
+    variant2 = next(v for v in data["variants"] if v["sku"] == "VARIANT-002")
+    assert variant2["weight"] == 500
+    assert variant2["length"] is None
+    assert variant2["width"] is None
+    assert variant2["height"] is None
+    assert variant2["is_default"] is False
+
 

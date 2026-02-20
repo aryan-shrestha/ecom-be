@@ -36,11 +36,11 @@ class ProductVariantModel(Base):
     cost_amount: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     cost_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     
-    # Dimensions
-    weight: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # grams
-    length: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # mm
-    width: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # mm
-    height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # mm
+    # Dimensions - map to actual DB column names
+    weight: Mapped[Optional[int]] = mapped_column("weight_grams", Integer, nullable=True)  # grams
+    length: Mapped[Optional[int]] = mapped_column("length_mm", Integer, nullable=True)  # mm
+    width: Mapped[Optional[int]] = mapped_column("width_mm", Integer, nullable=True)  # mm
+    height: Mapped[Optional[int]] = mapped_column("height_mm", Integer, nullable=True)  # mm
     
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(nullable=False)
