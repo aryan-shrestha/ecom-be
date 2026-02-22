@@ -68,7 +68,8 @@ class Container:
             issuer=settings.jwt_issuer,
             audience=settings.jwt_audience,
             kid=settings.jwt_active_kid,
-            access_token_ttl_minutes=settings.jwt_access_token_ttl_minutes)
+            access_token_ttl_minutes=settings.jwt_access_token_ttl_minutes,
+            clock=self._clock)
 
         # File storage - Use Cloudinary if configured, otherwise local
         if settings.cloudinary_url:
@@ -82,7 +83,7 @@ class Container:
                 base_path="./storage/uploads",
                 base_url="/storage/uploads",
             )
-            clock=self._clock,
+            
         
         self._audit_log: AuditLogPort = StructuredAuditLogger()
         self._cache: CachePort = MemoryCache()

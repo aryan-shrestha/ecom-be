@@ -5,7 +5,6 @@ from typing import Optional
 
 import cloudinary
 import cloudinary.uploader
-from PIL import Image
 
 from app.application.errors.app_errors import ImageUploadError
 from app.application.ports.file_storage_port import FileStoragePort, ImageUploadResult

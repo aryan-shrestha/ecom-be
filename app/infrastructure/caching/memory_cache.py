@@ -1,5 +1,6 @@
 """In-memory cache implementation."""
 
+import fnmatch
 from datetime import datetime, timedelta
 from typing import Any, Optional
 
@@ -40,3 +41,29 @@ class MemoryCache:
     async def clear(self) -> None:
         """Clear all cache entries."""
         self._cache.clear()
+
+    async def delete_pattern(self, pattern: str) -> None:
+        """
+        Delete all keys matching the given glob pattern.
+        
+        Also purges any expired keys encountered during the scan.
+        
+        Args:
+            pattern: Glob pattern to match keys (e.g., "products:*", "user:123:*")
+                    Supports * (any chars), ? (single char), [seq], [!seq]
+        """
+        now = datetime.utcnow()
+        keys_to_delete = []
+        
+        # Scan all keys and collect matches and expired keys
+        for key, (value, expires_at) in list(self._cache.items()):
+            # Remove expired keys
+            if now >= expires_at:
+                keys_to_delete.append(key)
+            # Match pattern on non-expired keys
+            elif fnmatch.fnmatch(key, pattern):
+                keys_to_delete.append(key)
+        
+        # Delete collected keys
+        for key in keys_to_delete:
+            self._cache.pop(key, None)

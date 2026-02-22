@@ -33,3 +33,13 @@ class CachePort(ABC):
     async def clear(self) -> None:
         """Clear all cache entries."""
         ...
+
+    @abstractmethod
+    async def delete_pattern(self, pattern: str) -> None:
+        """
+        Delete all keys matching the given pattern.
+        
+        Args:
+            pattern: Glob pattern to match keys (e.g., "products:*", "user:123:*")
+        """
+        ...
