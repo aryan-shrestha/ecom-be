@@ -10,6 +10,9 @@ from app.domain.repositories.user_repository import UserRepository
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.repositories.category_repository import CategoryRepository
 from app.domain.repositories.inventory_repository import InventoryRepository
+from app.domain.repositories.cart_repository import CartRepository
+from app.domain.repositories.order_repository import OrderRepository
+from app.domain.repositories.idempotency_repository import IdempotencyRepository
 
 
 class UnitOfWork(ABC):
@@ -26,6 +29,9 @@ class UnitOfWork(ABC):
     products: ProductRepository
     categories: CategoryRepository
     inventory: InventoryRepository
+    carts: CartRepository
+    orders: OrderRepository
+    idempotency: IdempotencyRepository
 
     @abstractmethod
     async def __aenter__(self) -> "UnitOfWork":

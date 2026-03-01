@@ -17,6 +17,12 @@ from app.infrastructure.db.sqlalchemy.models.role_model import RoleModel
 from app.infrastructure.db.sqlalchemy.models.role_permission_model import RolePermissionModel
 from app.infrastructure.db.sqlalchemy.models.user_model import UserModel
 from app.infrastructure.db.sqlalchemy.models.user_role_model import UserRoleModel
+# Cart + Order models
+from app.infrastructure.db.sqlalchemy.models.cart_model import CartModel
+from app.infrastructure.db.sqlalchemy.models.cart_item_model import CartItemModel
+from app.infrastructure.db.sqlalchemy.models.order_model import OrderModel
+from app.infrastructure.db.sqlalchemy.models.order_item_model import OrderItemModel
+from app.infrastructure.db.sqlalchemy.models.idempotency_key_model import IdempotencyKeyModel
 from config.settings import settings
 
 # this is the Alembic Config object, which provides

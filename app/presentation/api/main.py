@@ -14,6 +14,9 @@ from app.presentation.api.routes.rbac_routes import router as rbac_router
 from app.presentation.api.routes.admin_product_routes import router as admin_product_router
 from app.presentation.api.routes.storefront_product_routes import router as storefront_product_router
 from app.presentation.api.routes.admin_category_routes import router as admin_category_router
+from app.presentation.api.routes.cart_routes import router as cart_router
+from app.presentation.api.routes.order_routes import router as order_router
+from app.presentation.api.routes.admin_order_routes import router as admin_order_router
 from config.settings import settings
 
 # Configure logging
@@ -50,6 +53,9 @@ app.include_router(rbac_router)
 app.include_router(admin_product_router)
 app.include_router(storefront_product_router)
 app.include_router(admin_category_router)
+app.include_router(cart_router)
+app.include_router(order_router)
+app.include_router(admin_order_router)
 
 
 @app.on_event("startup")

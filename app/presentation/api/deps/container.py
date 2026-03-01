@@ -39,6 +39,18 @@ from app.application.use_cases.products.get_product_storefront import GetProduct
 from app.application.use_cases.products.list_products_storefront import ListProductsStorefrontUseCase
 from app.application.use_cases.categories.create_category import CreateCategoryUseCase
 from app.application.use_cases.categories.list_categories import ListCategoriesUseCase
+from app.application.use_cases.cart.get_cart import GetCartUseCase
+from app.application.use_cases.cart.add_cart_item import AddCartItemUseCase
+from app.application.use_cases.cart.update_cart_item import UpdateCartItemUseCase
+from app.application.use_cases.cart.remove_cart_item import RemoveCartItemUseCase
+from app.application.use_cases.cart.clear_cart import ClearCartUseCase
+from app.application.use_cases.cart.merge_guest_cart import MergeGuestCartUseCase
+from app.application.use_cases.orders.checkout import CheckoutUseCase
+from app.application.use_cases.orders.get_my_orders import GetMyOrdersUseCase
+from app.application.use_cases.orders.get_order_detail import GetOrderDetailUseCase
+from app.application.use_cases.orders.admin_list_orders import AdminListOrdersUseCase
+from app.application.use_cases.orders.admin_get_order import AdminGetOrderUseCase
+from app.application.use_cases.orders.admin_cancel_order import AdminCancelOrderUseCase
 from app.infrastructure.caching.memory_cache import MemoryCache
 from app.infrastructure.caching.system_clock import SystemClock
 from app.infrastructure.observability.audit_logger import StructuredAuditLogger
@@ -358,6 +370,54 @@ class Container:
         """Get ListCategoriesUseCase."""
         return ListCategoriesUseCase(
             uow=self.get_uow(session),
+        )
+
+    # Cart use cases
+
+    def get_get_cart_use_case(self, session: AsyncSession) -> GetCartUseCase:
+        return GetCartUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    def get_add_cart_item_use_case(self, session: AsyncSession) -> AddCartItemUseCase:
+        return AddCartItemUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    def get_update_cart_item_use_case(self, session: AsyncSession) -> UpdateCartItemUseCase:
+        return UpdateCartItemUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    def get_remove_cart_item_use_case(self, session: AsyncSession) -> RemoveCartItemUseCase:
+        return RemoveCartItemUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    def get_clear_cart_use_case(self, session: AsyncSession) -> ClearCartUseCase:
+        return ClearCartUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    def get_merge_guest_cart_use_case(self, session: AsyncSession) -> MergeGuestCartUseCase:
+        return MergeGuestCartUseCase(uow=self.get_uow(session), clock=self._clock)
+
+    # Order use cases
+
+    def get_checkout_use_case(self, session: AsyncSession) -> CheckoutUseCase:
+        return CheckoutUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+
+    def get_get_my_orders_use_case(self, session: AsyncSession) -> GetMyOrdersUseCase:
+        return GetMyOrdersUseCase(uow=self.get_uow(session))
+
+    def get_get_order_detail_use_case(self, session: AsyncSession) -> GetOrderDetailUseCase:
+        return GetOrderDetailUseCase(uow=self.get_uow(session))
+
+    def get_admin_list_orders_use_case(self, session: AsyncSession) -> AdminListOrdersUseCase:
+        return AdminListOrdersUseCase(uow=self.get_uow(session))
+
+    def get_admin_get_order_use_case(self, session: AsyncSession) -> AdminGetOrderUseCase:
+        return AdminGetOrderUseCase(uow=self.get_uow(session))
+
+    def get_admin_cancel_order_use_case(self, session: AsyncSession) -> AdminCancelOrderUseCase:
+        return AdminCancelOrderUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
         )
 
 

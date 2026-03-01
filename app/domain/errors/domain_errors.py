@@ -118,3 +118,49 @@ class ImageNotFoundError(DomainError):
 
 class ImageNotFoundError(DomainError):
     """Raised when product image cannot be found."""
+
+
+# Cart-related errors
+
+
+class CartNotFoundError(DomainError):
+    """Raised when cart cannot be found."""
+
+
+class CartItemNotFoundError(DomainError):
+    """Raised when cart item cannot be found."""
+
+
+class CartAlreadyConvertedError(DomainError):
+    """Raised when trying to modify a cart that has already been checked out."""
+
+
+class CartItemQuantityError(DomainError):
+    """Raised when cart item quantity is invalid."""
+
+
+class VariantNotAvailableError(DomainError):
+    """Raised when a variant is not available for purchase (inactive / product archived)."""
+
+
+# Order-related errors
+
+
+class OrderNotFoundError(DomainError):
+    """Raised when order cannot be found."""
+
+
+class OrderAlreadyCanceledError(DomainError):
+    """Raised when trying to cancel an already-canceled order."""
+
+
+class OrderCancelForbiddenError(DomainError):
+    """Raised when trying to cancel an order in a non-cancelable state."""
+
+
+class InvalidOrderTransitionError(DomainError):
+    """Raised when an invalid order status transition is attempted."""
+
+
+class EmptyCartError(DomainError):
+    """Raised when checkout is attempted on an empty cart."""

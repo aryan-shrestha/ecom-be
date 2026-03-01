@@ -43,3 +43,14 @@ class ImageUploadError(ApplicationError):
 
 class ImageProcessingError(ApplicationError):
     """Raised when image processing/validation fails."""
+
+
+class IdempotencyConflictError(ApplicationError):
+    """
+    Raised when an idempotency key is already being processed (in-flight duplicate).
+    Should be surfaced as HTTP 409.
+    """
+
+
+class OrderAccessDeniedError(ApplicationError):
+    """Raised when a user attempts to access an order that belongs to another user."""
