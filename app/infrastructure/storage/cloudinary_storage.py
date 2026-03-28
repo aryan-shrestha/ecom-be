@@ -87,7 +87,7 @@ class CloudinaryStorage(FileStoragePort):
         except cloudinary.exceptions.Error as e:
             raise ImageUploadError(f"Cloudinary upload failed: {str(e)}")
         except Exception as e:
-            raise ImageUploadError(f"Image upload failed: {str(e)}")
+            raise ImageUploadError(f"{str(e)}")
 
     async def delete_file(self, file_path: str) -> None:
         """

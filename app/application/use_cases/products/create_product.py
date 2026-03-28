@@ -27,21 +27,16 @@ class CreateProductUseCase:
     async def execute(self, request: CreateProductRequest) -> ProductDTO:
         """
         Create new product.
-        
-        Raises:
-            ConflictError: If product with slug already exists
         """
-        slug = Slug.from_string(request.slug)
+        product_id = uuid.uuid4()
+        slug = Slug.from_string_and_id(request.name, product_id)
 
         async with self.uow:
-            # Check if product with slug exists
-            if await self.uow.products.exists_by_slug(slug):
-                raise ConflictError(f"Product with slug '{slug}' already exists")
 
             # Create product entity
             now = self.clock.now()
             product = Product(
-                id=uuid.uuid4(),
+                id=product_id,
                 status=ProductStatus.DRAFT,
                 name=request.name,
                 slug=slug,

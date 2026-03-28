@@ -72,7 +72,6 @@ async def create_product(
     try:
         request = CreateProductRequest(
             name=request_data.name,
-            slug=request_data.slug,
             description_short=request_data.description_short,
             description_long=request_data.description_long,
             tags=request_data.tags,

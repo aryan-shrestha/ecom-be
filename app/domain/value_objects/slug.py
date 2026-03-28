@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import dataclass
-
+from uuid import UUID
 
 @dataclass(frozen=True)
 class Slug:
@@ -40,6 +40,17 @@ class Slug:
             raise ValueError("Cannot generate valid slug from provided text")
 
         return cls(value=slug)
+
+    @classmethod
+    def from_string_and_id(cls, text: str, id: UUID) -> "Slug":
+        """
+        Create slug from string and id.
+        
+        Combines text and id to ensure uniqueness, then generates slug.
+        """
+        short_id = str(id).split("-")[0]
+        combined = f"{text}-{short_id}"
+        return cls.from_string(combined)
 
     def __str__(self) -> str:
         """String representation."""

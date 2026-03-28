@@ -114,7 +114,7 @@ class UploadVariantImageUseCase:
                     content_type=request.content_type,
                 )
             except Exception as e:
-                raise ImageUploadError(f"Failed to upload image: {str(e)}")
+                raise ImageUploadError(f"{str(e)}")
 
             # Create image entity
             now = self.clock.now()

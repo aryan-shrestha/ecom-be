@@ -131,7 +131,6 @@ class CreateProductRequest:
     """Request to create product."""
 
     name: str
-    slug: str
     description_short: Optional[str] = None
     description_long: Optional[str] = None
     tags: list[str] = None

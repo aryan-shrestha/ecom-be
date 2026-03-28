@@ -24,7 +24,6 @@ class CreateProductRequestSchema(BaseModel):
     """Request to create product."""
 
     name: str = Field(..., min_length=1, max_length=255)
-    slug: str = Field(..., min_length=1, max_length=200)
     description_short: Optional[str] = Field(None, max_length=500)
     description_long: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
