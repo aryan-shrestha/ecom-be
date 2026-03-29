@@ -23,13 +23,14 @@ COPY pyproject.toml uv.lock* /app/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project --extra dev
 
-# Copy startup script into image
-COPY docker/dev-start.sh /usr/local/bin/dev-start.sh
-RUN chmod +x /usr/local/bin/dev-start.sh
+# # Copy startup script into image
+# COPY docker/dev-start.sh /usr/local/bin/dev-start.sh
+# RUN chmod +x /usr/local/bin/dev-start.sh
 
 # Copy app code
 COPY . /app
+RUN chmod +x /app/docker/dev-start.sh
 
 EXPOSE 8000
 
-CMD ["/usr/local/bin/dev-start.sh"]
+CMD ["sh", "/app/docker/dev-start.sh"]
