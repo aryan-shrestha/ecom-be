@@ -39,7 +39,7 @@ services:
       - ./:/app
       - uv_venv:/opt/venv
       - ./keys:/app/keys
-    command: ["sh", "/usr/local/bin/dev-start.sh"]
+    command: ["/usr/local/bin/dev-start.sh"]
 
 volumes:
   postgres_data:

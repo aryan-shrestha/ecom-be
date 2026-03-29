@@ -32,4 +32,4 @@ COPY . /app
 
 EXPOSE 8000
 
-CMD ["sh", "/usr/local/bin/dev-start.sh"]
+CMD ["/usr/local/bin/dev-start.sh"]

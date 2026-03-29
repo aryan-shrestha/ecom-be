@@ -4,6 +4,7 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 
 from app.infrastructure.db.sqlalchemy.session import close_engine, init_engine
 from app.presentation.api.middleware.correlation_id import correlation_id_middleware
@@ -28,10 +29,13 @@ logging.basicConfig(
 # Create FastAPI app
 app = FastAPI(
     title="E-Commerce API",
-    description="Production-ready e-commerce API with Clean Architecture",
+    description="E-commerce API with Clean Architecture",
     version="0.1.0",
     debug=settings.debug,
 )
+
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
 
 # CORS middleware
 app.add_middleware(
