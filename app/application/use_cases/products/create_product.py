@@ -3,7 +3,6 @@
 import uuid
 
 from app.application.dto.product_dto import CreateProductRequest, ProductDTO
-from app.application.errors.app_errors import ConflictError
 from app.application.interfaces.uow import UnitOfWork
 from app.application.ports.audit_log_port import AuditLogPort
 from app.application.ports.clock_port import ClockPort

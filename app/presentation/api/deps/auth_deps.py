@@ -29,7 +29,7 @@ async def get_current_principal(
     - User exists and is active
     - Token version matches user's current version
     """
-    print(f"Authorization header: {authorization}")  # Debug log
+
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

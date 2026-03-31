@@ -160,7 +160,6 @@ class CreateCategoryRequestSchema(BaseModel):
     """Request to create category."""
 
     name: str = Field(..., min_length=1, max_length=100)
-    slug: str = Field(..., min_length=1, max_length=200)
     parent_id: Optional[UUID] = None
 
 

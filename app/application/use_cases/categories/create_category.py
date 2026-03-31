@@ -24,16 +24,14 @@ class CreateCategoryUseCase:
         Raises:
             ConflictError: If category with slug already exists
         """
-        slug = Slug.from_string(request.slug)
+        category_id = uuid.uuid4()
+        slug = Slug.from_string_and_id(request.name, category_id)
 
         async with self.uow:
-            # Check slug uniqueness
-            if await self.uow.categories.exists_by_slug(slug):
-                raise ConflictError(f"Category with slug '{slug}' already exists")
-
+        
             # Create category
             category = Category(
-                id=uuid.uuid4(),
+                id=category_id,
                 name=request.name,
                 slug=slug,
                 parent_id=request.parent_id,

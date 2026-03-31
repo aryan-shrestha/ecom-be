@@ -30,11 +30,11 @@ class Category:
         """Check if category is a root category."""
         return self.parent_id is None
 
-    def update(self, name: str, parent_id: Optional[UUID]) -> "Category":
+    def update(self, name: str, parent_id: Optional[UUID], slug: Slug) -> "Category":
         """Return new category with updated details."""
         return Category(
             id=self.id,
             name=name,
-            slug=self.slug,  # Slug not changed in update
+            slug=slug,  # Update the slug based on the new name and existing ID
             parent_id=parent_id,
         )

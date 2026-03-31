@@ -240,7 +240,6 @@ class CreateCategoryRequest:
     """Request to create category."""
 
     name: str
-    slug: str
     parent_id: Optional[UUID] = None
 
 

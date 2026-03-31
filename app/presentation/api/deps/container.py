@@ -17,6 +17,8 @@ from app.application.use_cases.auth.logout import LogoutUseCase
 from app.application.use_cases.auth.logout_all import LogoutAllUseCase
 from app.application.use_cases.auth.refresh import RefreshUseCase
 from app.application.use_cases.auth.register import RegisterUseCase
+from app.application.use_cases.categories.get_category import GetCategoryUseCase
+from app.application.use_cases.categories.update_category import UpdateCategoryUseCase
 from app.application.use_cases.rbac.assign_role import AssignRoleUseCase
 from app.application.use_cases.rbac.check_permission import CheckPermissionUseCase
 from app.application.use_cases.products.create_product import CreateProductUseCase
@@ -359,6 +361,12 @@ class Container:
 
     # Category use cases
 
+    def get_get_category_use_case(self, session: AsyncSession) -> GetCategoryUseCase:
+        """Get GetCategoryUseCase."""
+        return GetCategoryUseCase(
+            uow=self.get_uow(session),
+        )
+
     def get_create_category_use_case(self, session: AsyncSession) -> CreateCategoryUseCase:
         """Get CreateCategoryUseCase."""
         return CreateCategoryUseCase(
@@ -370,6 +378,13 @@ class Container:
         """Get ListCategoriesUseCase."""
         return ListCategoriesUseCase(
             uow=self.get_uow(session),
+        )
+    
+    def get_update_category_use_case(self, session: AsyncSession) -> UpdateCategoryUseCase:
+        """Get UpdateCategoryUseCase."""
+        return UpdateCategoryUseCase(
+            uow=self.get_uow(session),
+            audit_log=self._audit_log,
         )
 
     # Cart use cases
