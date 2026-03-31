@@ -75,6 +75,8 @@ async def get_current_principal(
 
         return PrincipalDTO(
             user_id=user.id,
+            first_name=user.first_name,
+            last_name=user.last_name,
             email=str(user.email),
             roles=roles,
             token_version=user.token_version,

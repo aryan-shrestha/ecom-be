@@ -13,6 +13,8 @@ class UserMapper:
         """Convert ORM model to domain entity."""
         return User(
             id=model.id,
+            first_name=model.first_name,
+            last_name=model.last_name,
             email=Email(model.email),
             password_hash=model.password_hash,
             is_active=model.is_active,
@@ -27,6 +29,8 @@ class UserMapper:
         """Convert domain entity to ORM model."""
         return UserModel(
             id=entity.id,
+            first_name=entity.first_name,
+            last_name=entity.last_name,
             email=str(entity.email),
             password_hash=entity.password_hash,
             is_active=entity.is_active,
@@ -43,5 +47,7 @@ class UserMapper:
         model.password_hash = entity.password_hash
         model.is_active = entity.is_active
         model.is_verified = entity.is_verified
+        model.first_name = entity.first_name
+        model.last_name = entity.last_name
         model.token_version = entity.token_version
         model.updated_at = entity.updated_at

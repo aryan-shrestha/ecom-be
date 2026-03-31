@@ -13,6 +13,8 @@ class User:
     """User domain entity representing an authenticated user in the system."""
 
     id: UUID
+    first_name: Optional[str]
+    last_name: Optional[str]
     email: Email
     password_hash: str
     is_active: bool
@@ -25,6 +27,8 @@ class User:
         """Return new User instance with updated password and incremented token_version."""
         return User(
             id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
             email=self.email,
             password_hash=password_hash,
             is_active=self.is_active,
@@ -38,6 +42,8 @@ class User:
         """Return new User instance with incremented token_version (for session revocation)."""
         return User(
             id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
             email=self.email,
             password_hash=self.password_hash,
             is_active=self.is_active,
@@ -51,6 +57,8 @@ class User:
         """Return new User instance marked as inactive."""
         return User(
             id=self.id,
+            first_name=self.first_name,
+            last_name=self.last_name,
             email=self.email,
             password_hash=self.password_hash,
             is_active=False,

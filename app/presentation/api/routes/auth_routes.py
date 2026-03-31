@@ -55,10 +55,15 @@ async def register(
     use_case = container.get_register_use_case(session)
 
     try:
-        request = RegisterRequest(email=request_data.email, password=request_data.password)
+        request = RegisterRequest(
+            first_name=request_data.first_name, 
+            last_name=request_data.last_name, 
+            email=request_data.email, 
+            password=request_data.password
+        )
         response = await use_case.execute(request)
 
-        return RegisterResponseSchema(user_id=str(response.user_id), email=response.email)
+        return RegisterResponseSchema(user_id=str(response.user_id), email=response.email, first_name=response.first_name, last_name=response.last_name)
 
     except UserAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))

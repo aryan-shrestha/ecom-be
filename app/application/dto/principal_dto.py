@@ -11,7 +11,8 @@ class PrincipalDTO:
     
     Used to pass authentication context across application boundaries.
     """
-
+    first_name: str
+    last_name: str
     user_id: UUID
     email: str
     roles: list[str]

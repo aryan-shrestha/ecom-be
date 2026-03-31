@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.infrastructure.db.sqlalchemy.models.permission_model import PermissionModel
 from app.infrastructure.db.sqlalchemy.models.role_model import RoleModel

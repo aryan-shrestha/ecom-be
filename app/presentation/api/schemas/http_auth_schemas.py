@@ -5,7 +5,8 @@ from pydantic import BaseModel, EmailStr, Field
 
 class RegisterRequestSchema(BaseModel):
     """Request schema for user registration."""
-
+    first_name: str = Field(default=None, max_length=50)
+    last_name: str = Field(default=None, max_length=50)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
@@ -15,6 +16,8 @@ class RegisterResponseSchema(BaseModel):
 
     user_id: str
     email: str
+    first_name: str | None
+    last_name: str | None
 
 
 class LoginRequestSchema(BaseModel):

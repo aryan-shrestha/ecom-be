@@ -56,6 +56,8 @@ class RegisterUseCase:
             user = User(
                 id=uuid.uuid4(),
                 email=email,
+                first_name=request.first_name.lower() if request.first_name else None,
+                last_name=request.last_name.lower() if request.last_name else None,
                 password_hash=password_hash,
                 is_active=True,
                 is_verified=False,  # Could require email verification
@@ -75,4 +77,9 @@ class RegisterUseCase:
                 details={"email": str(user.email)},
             )
 
-            return RegisterResponse(user_id=user.id, email=str(user.email))
+            return RegisterResponse(
+                user_id=user.id,
+                email=str(user.email),
+                first_name=user.first_name,
+                last_name=user.last_name
+            )

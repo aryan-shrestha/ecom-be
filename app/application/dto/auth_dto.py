@@ -8,7 +8,8 @@ from uuid import UUID
 @dataclass
 class RegisterRequest:
     """Input DTO for user registration."""
-
+    first_name: Optional[str]
+    last_name: Optional[str]
     email: str
     password: str
 
@@ -16,9 +17,11 @@ class RegisterRequest:
 @dataclass
 class RegisterResponse:
     """Output DTO for user registration."""
-
+    first_name: Optional[str]
+    last_name: Optional[str]
     user_id: UUID
     email: str
+    
 
 
 @dataclass
