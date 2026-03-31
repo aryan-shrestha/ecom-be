@@ -33,4 +33,4 @@ RUN chmod +x /app/docker/dev-start.sh
 
 EXPOSE 8000
 
-CMD ["/app/docker/dev-start.sh"]
+CMD ["sh", "/app/docker/dev-start.sh"]
