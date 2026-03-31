@@ -265,6 +265,8 @@ async def get_me(
     """Get current user information."""
     return PrincipalResponseSchema(
         user_id=str(principal.user_id),
+        first_name=principal.first_name,
+        last_name=principal.last_name,
         email=principal.email,
         roles=principal.roles,
         is_active=principal.is_active,

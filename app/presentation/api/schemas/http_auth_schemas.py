@@ -62,7 +62,8 @@ class ErrorResponseSchema(BaseModel):
 
 class PrincipalResponseSchema(BaseModel):
     """Response schema for current principal info."""
-
+    first_name: str | None
+    last_name: str | None
     user_id: str
     email: str
     roles: list[str]
