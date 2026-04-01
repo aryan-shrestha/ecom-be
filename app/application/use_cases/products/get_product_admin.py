@@ -76,6 +76,19 @@ class GetProductAdminUseCase:
                     updated_at=product.updated_at,
                     created_by=product.created_by,
                     updated_by=product.updated_by,
+                    images=[
+                        ProductImageDTO(
+                            id=img.id,
+                            product_id=img.product_id,
+                            url=img.url,
+                            position=img.position,
+                            created_at=img.created_at,
+                            alt_text=img.alt_text,
+                            width=img.width,
+                            height=img.height,
+                            format=img.format,
+                        )
+                        for img in product.images] if images else []
                 ),
                 variants=[
                     VariantDTO(
@@ -102,17 +115,6 @@ class GetProductAdminUseCase:
                         updated_at=v.updated_at,
                     )
                     for v in variants
-                ],
-                images=[
-                    ProductImageDTO(
-                        id=img.id,
-                        product_id=img.product_id,
-                        url=img.url,
-                        alt_text=img.alt_text,
-                        position=img.position,
-                        created_at=img.created_at,
-                    )
-                    for img in images
                 ],
                 categories=[
                     CategoryDTO(

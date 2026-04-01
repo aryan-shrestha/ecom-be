@@ -58,6 +58,7 @@ class ProductResponseSchema(BaseModel):
     updated_at: datetime
     created_by: Optional[UUID] = None
     updated_by: Optional[UUID] = None
+    images: Optional[list["ProductImageResponseSchema"]] = None
 
 
 # Variant schemas
@@ -246,7 +247,6 @@ class ProductDetailResponseSchema(BaseModel):
 
     product: ProductResponseSchema
     variants: list[VariantResponseSchema]
-    images: list[ProductImageResponseSchema]
     categories: list[CategoryResponseSchema]
     inventory: dict[UUID, InventoryResponseSchema]  # variant_id -> inventory
 

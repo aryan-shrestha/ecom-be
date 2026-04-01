@@ -189,6 +189,25 @@ async def get_product(
                 updated_at=result.product.updated_at,
                 created_by=result.product.created_by,
                 updated_by=result.product.updated_by,
+                images=[
+                    ProductImageResponseSchema(
+                        id=img.id,
+                        product_id=img.product_id,
+                        url=img.url,
+                        alt_text=img.alt_text,
+                        position=img.position,
+                        created_at=img.created_at,
+                        provider=img.provider,
+                        provider_public_id=img.provider_public_id,
+                        bytes_size=img.bytes_size,
+                        width=img.width,
+                        height=img.height,
+                        format=img.format,
+                    )
+                    for img in result.product.images
+                ]
+                if result.product.images
+                else []
             ),
             variants=[
                 VariantResponseSchema(
@@ -215,17 +234,6 @@ async def get_product(
                     updated_at=v.updated_at,
                 )
                 for v in result.variants
-            ],
-            images=[
-                ProductImageResponseSchema(
-                    id=img.id,
-                    product_id=img.product_id,
-                    url=img.url,
-                    alt_text=img.alt_text,
-                    position=img.position,
-                    created_at=img.created_at,
-                )
-                for img in result.images
             ],
             categories=[
                 CategoryResponseSchema(
