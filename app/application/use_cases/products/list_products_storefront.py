@@ -3,7 +3,7 @@
 from typing import Optional
 from uuid import UUID
 
-from app.application.dto.product_dto import ProductListResponse, ProductDTO
+from app.application.dto.product_dto import ProductImageDTO, ProductListResponse, ProductDTO
 from app.application.interfaces.uow import UnitOfWork
 from app.application.ports.cache_port import CachePort
 from app.domain.entities.product import ProductStatus
@@ -51,6 +51,7 @@ class ListProductsStorefrontUseCase:
             )
 
             # Convert to DTOs (limited fields for storefront)
+            
             product_dtos = [
                 ProductDTO(
                     id=p.id,
@@ -64,10 +65,18 @@ class ListProductsStorefrontUseCase:
                     sort_order=p.sort_order,
                     created_at=p.created_at,
                     updated_at=p.updated_at,
+                    images=[ProductImageDTO(
+                        id=img.id,
+                        product_id=img.product_id,
+                        url=img.url,
+                        alt_text=img.alt_text,
+                        position=img.position,
+                        created_at=img.created_at,
+                    ) for img in p.images], 
                 )
                 for p in products
             ]
-
+ 
             response = ProductListResponse(
                 products=product_dtos,
                 total=total,

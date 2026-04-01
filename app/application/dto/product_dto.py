@@ -31,6 +31,7 @@ class ProductDTO:
     updated_at: datetime
     created_by: Optional[UUID] = None
     updated_by: Optional[UUID] = None
+    images: Optional[list["ProductImageDTO"]] = None
 
 
 @dataclass
@@ -261,7 +262,6 @@ class ProductDetailResponse:
 
     product: ProductDTO
     variants: list[VariantDTO]
-    images: list[ProductImageDTO]
     categories: list[CategoryDTO]
     inventory_map: dict[UUID, InventoryDTO]  # variant_id -> inventory
 

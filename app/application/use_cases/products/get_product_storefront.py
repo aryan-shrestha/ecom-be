@@ -53,9 +53,6 @@ class GetProductStorefrontUseCase:
             all_variants = await self.uow.products.get_variants_for_product(product.id)
             variants = [v for v in all_variants if v.status == VariantStatus.ACTIVE]
 
-            # Get images
-            images = await self.uow.products.get_images_for_product(product.id)
-
             # Get categories
             category_ids = await self.uow.products.get_category_ids_for_product(product.id)
             categories = []
@@ -90,6 +87,7 @@ class GetProductStorefrontUseCase:
                     sort_order=product.sort_order,
                     created_at=product.created_at,
                     updated_at=product.updated_at,
+                    images=product.images,
                 ),
                 variants=[
                     VariantDTO(
@@ -114,17 +112,6 @@ class GetProductStorefrontUseCase:
                         updated_at=v.updated_at,
                     )
                     for v in variants
-                ],
-                images=[
-                    ProductImageDTO(
-                        id=img.id,
-                        product_id=img.product_id,
-                        url=img.url,
-                        alt_text=img.alt_text,
-                        position=img.position,
-                        created_at=img.created_at,
-                    )
-                    for img in images
                 ],
                 categories=[
                     CategoryDTO(

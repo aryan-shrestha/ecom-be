@@ -3,6 +3,7 @@
 from app.domain.entities.product import Product, ProductStatus
 from app.domain.value_objects.slug import Slug
 from app.infrastructure.db.sqlalchemy.models.product_model import ProductModel
+from app.infrastructure.mappers.image_mapper import ImageMapper
 
 
 class ProductMapper:
@@ -25,6 +26,9 @@ class ProductMapper:
             updated_at=model.updated_at,
             created_by=model.created_by,
             updated_by=model.updated_by,
+            images=[
+                ImageMapper.to_entity(image_model) for image_model in sorted(model.images, key=lambda img: img.position)
+            ]
         )
 
     @staticmethod

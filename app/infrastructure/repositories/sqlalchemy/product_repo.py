@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import delete, func, or_, select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.domain.entities.product import Product, ProductStatus
 from app.domain.entities.product_image import ProductImage
@@ -30,14 +31,18 @@ class SqlAlchemyProductRepository(ProductRepository):
 
     async def get_by_id(self, product_id: UUID) -> Optional[Product]:
         """Retrieve product by ID."""
-        stmt = select(ProductModel).where(ProductModel.id == product_id)
+        stmt = (select(ProductModel)
+                .options(selectinload(ProductModel.images))
+                .where(ProductModel.id == product_id))
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
         return ProductMapper.to_entity(model) if model else None
 
     async def get_by_slug(self, slug: Slug) -> Optional[Product]:
         """Retrieve product by slug."""
-        stmt = select(ProductModel).where(ProductModel.slug == str(slug))
+        stmt = (select(ProductModel)
+                .options(selectinload(ProductModel.images))
+                .where(ProductModel.slug == str(slug)))
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
         return ProductMapper.to_entity(model) if model else None
@@ -83,7 +88,10 @@ class SqlAlchemyProductRepository(ProductRepository):
     ) -> tuple[list[Product], int]:
         """List products with pagination and filters."""
         # Build query
-        query = select(ProductModel)
+        query = (
+            select(ProductModel)
+            .options(selectinload(ProductModel.images))
+        )
 
         # Apply filters
         filters = []

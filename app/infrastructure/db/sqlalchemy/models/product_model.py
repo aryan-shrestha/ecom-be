@@ -6,7 +6,7 @@ from typing import Optional
 
 from sqlalchemy import Boolean, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.db.sqlalchemy.base import Base
 
@@ -29,3 +29,11 @@ class ProductModel(Base):
     updated_at: Mapped[datetime] = mapped_column(nullable=False)
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     updated_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
+
+    images: Mapped[list['ProductImageModel']] = relationship(
+        "ProductImageModel", 
+        back_populates="product", 
+        cascade="all, delete-orphan", 
+        order_by="ProductImageModel.position", 
+        lazy="selectin"
+    )

@@ -46,7 +46,7 @@ async def list_published_products(
         sort_by=sort_by,
         sort_desc=sort_desc,
     )
-
+    print(f"Products retrieved: {result.products}")  # Debug log
     return StorefrontProductListResponseSchema(
         products=[
             StorefrontProductListItemSchema(
@@ -56,6 +56,17 @@ async def list_published_products(
                 description_short=p.description_short,
                 tags=p.tags,
                 featured=p.featured,
+                images=[
+                    ProductImageResponseSchema(
+                        id=img.id,
+                        product_id=img.product_id,
+                        url=img.url,
+                        alt_text=img.alt_text,
+                        position=img.position,
+                        created_at=img.created_at,
+                    )
+                    for img in p.images
+                ]
             )
             for p in result.products
         ],
@@ -85,6 +96,17 @@ async def get_published_product(
             description_long=result.product.description_long,
             tags=result.product.tags,
             featured=result.product.featured,
+            images=[
+                ProductImageResponseSchema(
+                    id=img.id,
+                    product_id=img.product_id,
+                    url=img.url,
+                    alt_text=img.alt_text,
+                    position=img.position,
+                    created_at=img.created_at,
+                )
+                for img in result.product.images
+            ] if result.product.images else [],
             variants=[
                 StorefrontVariantResponseSchema(
                     id=v.id,
@@ -104,17 +126,6 @@ async def get_published_product(
                     else False,
                 )
                 for v in result.variants
-            ],
-            images=[
-                ProductImageResponseSchema(
-                    id=img.id,
-                    product_id=img.product_id,
-                    url=img.url,
-                    alt_text=img.alt_text,
-                    position=img.position,
-                    created_at=img.created_at,
-                )
-                for img in result.images
             ],
             categories=[
                 CategoryResponseSchema(

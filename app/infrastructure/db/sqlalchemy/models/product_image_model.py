@@ -6,7 +6,7 @@ from typing import Optional
 
 from sqlalchemy import Integer, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.infrastructure.db.sqlalchemy.base import Base
 
@@ -35,3 +35,5 @@ class ProductImageModel(Base):
     width: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     format: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+
+    product: Mapped['ProductModel'] = relationship("ProductModel", back_populates="images")

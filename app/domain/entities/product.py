@@ -34,6 +34,7 @@ class Product:
     updated_at: datetime
     created_by: Optional[UUID] = None
     updated_by: Optional[UUID] = None
+    images: Optional[list["ProductImage"]] = None 
 
     def __post_init__(self) -> None:
         """Validate product invariants."""

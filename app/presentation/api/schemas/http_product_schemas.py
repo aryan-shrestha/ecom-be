@@ -298,6 +298,7 @@ class StorefrontProductListItemSchema(BaseModel):
     description_short: Optional[str]
     tags: list[str]
     featured: bool
+    images: Optional[list[ProductImageResponseSchema]] = None
 
 
 class StorefrontProductListResponseSchema(BaseModel):

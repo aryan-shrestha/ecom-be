@@ -76,4 +76,5 @@ class ArchiveProductUseCase:
                 updated_at=archived_product.updated_at,
                 created_by=archived_product.created_by,
                 updated_by=archived_product.updated_by,
+                images=archived_product.images,
             )
