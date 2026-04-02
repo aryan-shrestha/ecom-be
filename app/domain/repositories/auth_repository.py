@@ -3,15 +3,15 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from app.domain.entities.user import User
+from app.domain.entities.role import Role
 
 
 class AuthRepository(ABC):
     """Repository interface for authentication operations."""
 
     @abstractmethod
-    async def get_user_roles(self, user_id: UUID) -> list[str]:
-        """Get list of role names assigned to user."""
+    async def get_user_roles(self, user_id: UUID) -> list[Role]:
+        """Get list of roles assigned to user."""
         ...
 
     @abstractmethod

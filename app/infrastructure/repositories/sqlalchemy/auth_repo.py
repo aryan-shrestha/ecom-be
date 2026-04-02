@@ -5,9 +5,11 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domain.entities.role import Role
 from app.domain.repositories.auth_repository import AuthRepository
 from app.infrastructure.db.sqlalchemy.models.role_model import RoleModel
 from app.infrastructure.db.sqlalchemy.models.user_role_model import UserRoleModel
+from app.infrastructure.mappers.role_mapper import RoleMapper
 
 
 class SqlAlchemyAuthRepository(AuthRepository):
@@ -16,15 +18,16 @@ class SqlAlchemyAuthRepository(AuthRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def get_user_roles(self, user_id: UUID) -> list[str]:
-        """Get list of role names assigned to user."""
+    async def get_user_roles(self, user_id: UUID) -> list[Role]:
+        """Get list of role assigned to user."""
         stmt = (
-            select(RoleModel.name)
+            select(RoleModel)
             .join(UserRoleModel, UserRoleModel.role_id == RoleModel.id)
             .where(UserRoleModel.user_id == user_id)
         )
         result = await self.session.execute(stmt)
-        return list(result.scalars().all())
+        role_models = list(result.scalars().all())
+        return [RoleMapper.to_entity(model) for model in role_models]
 
     async def assign_role_to_user(self, user_id: UUID, role_name: str) -> None:
         """Assign role to user."""

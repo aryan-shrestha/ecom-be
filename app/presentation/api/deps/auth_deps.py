@@ -8,7 +8,6 @@ from fastapi import Cookie, Depends, Header, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dto.principal_dto import PrincipalDTO
-from app.application.use_cases.rbac.check_permission import CheckPermissionUseCase
 from app.domain.entities.user import User
 from app.infrastructure.db.sqlalchemy.session import get_session
 from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork

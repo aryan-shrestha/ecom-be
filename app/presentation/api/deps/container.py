@@ -12,6 +12,8 @@ from app.application.ports.crypto_port import PasswordHasherPort, TokenHasherPor
 from app.application.ports.file_storage_port import FileStoragePort
 from app.application.ports.jwt_port import JwtPort
 from app.application.use_cases.auth.change_password import ChangePasswordUseCase
+from app.application.use_cases.users.get_user_admin import GetUserAdminUseCase
+from app.application.use_cases.users.list_user_admin import ListUsersAdminUseCase
 from app.application.use_cases.auth.login import LoginUseCase
 from app.application.use_cases.auth.logout import LogoutUseCase
 from app.application.use_cases.auth.logout_all import LogoutAllUseCase
@@ -205,6 +207,19 @@ class Container:
         return AssignRoleUseCase(
             uow=self.get_uow(session),
             audit_log=self._audit_log,
+        )
+    
+    # User use cases
+    def get_user_list_admin_use_case(self, session: AsyncSession) -> ListUsersAdminUseCase:
+        """Get ListUsersAdminUseCase."""
+        return ListUsersAdminUseCase(
+            uow=self.get_uow(session),
+        )
+
+    def get_user_detail_admin_use_case(self, session: AsyncSession) -> GetUserAdminUseCase:
+        """Get GetUserAdminUseCase."""
+        return GetUserAdminUseCase(
+            uow=self.get_uow(session),
         )
 
     # Product use cases

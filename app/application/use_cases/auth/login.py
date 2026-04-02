@@ -80,10 +80,11 @@ class LoginUseCase:
 
             # Get user roles
             roles = await self.uow.auth.get_user_roles(user.id)
+            role_names = [role.name for role in roles]
 
             # Issue access token
             access_token = self.jwt_service.issue_access_token(
-                user_id=user.id, roles=roles, token_version=user.token_version
+                user_id=user.id, roles=role_names, token_version=user.token_version
             )
 
             # Generate refresh token
@@ -117,7 +118,7 @@ class LoginUseCase:
             await self.audit_log.log_event(
                 event_type="user.login_success",
                 user_id=user.id,
-                details={"email": str(user.email), "roles": roles},
+                details={"email": str(user.email), "roles": role_names},
                 ip=request.ip,
             )
 

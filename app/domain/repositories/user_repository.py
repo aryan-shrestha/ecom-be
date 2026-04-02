@@ -40,3 +40,8 @@ class UserRepository(ABC):
     async def delete(self, user_id: UUID) -> None:
         """Delete user by ID."""
         ...
+
+    @abstractmethod
+    async def list_paginated(self, offset: int, limit: int) -> tuple[list[User], int]:
+        """List users with pagination."""
+        ...

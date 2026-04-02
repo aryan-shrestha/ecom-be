@@ -3,7 +3,7 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.user import User
@@ -63,3 +63,16 @@ class SqlAlchemyUserRepository(UserRepository):
         if model:
             await self.session.delete(model)
             await self.session.flush()
+
+    async def list_paginated(self, offset: int, limit: int) -> tuple[list[User], int]:
+        """List users with pagination."""
+        stmt = select(UserModel).offset(offset).limit(limit)
+        count_stmt = select(func.count()).select_from(UserModel)
+
+        result = await self.session.execute(stmt)
+        models = result.scalars().all()
+
+        total_result = await self.session.execute(count_stmt)
+        total = total_result.scalar_one()
+        
+        return [UserMapper.to_entity(model) for model in models], total
