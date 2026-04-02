@@ -100,6 +100,7 @@ async def login(
             samesite="lax",
             path="/auth",
             max_age=settings.refresh_token_ttl_days * 24 * 60 * 60,
+            domain=settings.cookie_domain,
         )
 
         # Set CSRF token cookie (NOT HttpOnly, so JS can read it)
@@ -111,6 +112,7 @@ async def login(
             samesite="lax",
             path="/",
             max_age=settings.refresh_token_ttl_days * 24 * 60 * 60,
+            domain=settings.cookie_domain,
         )
 
         return LoginResponseSchema(
@@ -131,7 +133,8 @@ async def refresh(
     session: AsyncSession = Depends(get_session),
     container: Container = Depends(get_container),
 ) -> RefreshResponseSchema:
-    """Refresh access token using refresh token cookie."""
+    """Refresh access token using refresh token cookie."""  
+
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -158,6 +161,7 @@ async def refresh(
             samesite="lax",
             path="/auth",
             max_age=settings.refresh_token_ttl_days * 24 * 60 * 60,
+            domain=settings.cookie_domain,
         )
 
         # Set new CSRF token cookie
@@ -169,6 +173,7 @@ async def refresh(
             samesite="lax",
             path="/",
             max_age=settings.refresh_token_ttl_days * 24 * 60 * 60,
+            domain=settings.cookie_domain,
         )
 
         return RefreshResponseSchema(
@@ -208,8 +213,8 @@ async def logout(
     await use_case.execute(logout_request)
 
     # Clear cookies
-    response.delete_cookie(key="refresh_token", path="/auth")
-    response.delete_cookie(key="csrf_token", path="/")
+    response.delete_cookie(key="refresh_token", path="/auth", domain=settings.cookie_domain)
+    response.delete_cookie(key="csrf_token", path="/", domain=settings.cookie_domain)
 
     return MessageResponseSchema(message="Logged out successfully")
 
@@ -226,8 +231,8 @@ async def logout_all(
     await use_case.execute(principal.user_id)
 
     # Clear cookies
-    response.delete_cookie(key="refresh_token", path="/auth")
-    response.delete_cookie(key="csrf_token", path="/")
+    response.delete_cookie(key="refresh_token", path="/auth", domain=settings.cookie_domain)
+    response.delete_cookie(key="csrf_token", path="/", domain=settings.cookie_domain)
 
     return MessageResponseSchema(message="Logged out from all sessions")
 
