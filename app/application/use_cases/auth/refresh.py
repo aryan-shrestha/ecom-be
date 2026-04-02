@@ -115,10 +115,11 @@ class RefreshUseCase:
 
             # Get user roles
             roles = await self.uow.auth.get_user_roles(user.id)
+            roles_name = [role.name for role in roles]
 
             # Issue new access token
             access_token = self.jwt_service.issue_access_token(
-                user_id=user.id, roles=roles, token_version=user.token_version
+                user_id=user.id, roles=roles_name, token_version=user.token_version
             )
 
             # Generate new refresh token (rotation)
