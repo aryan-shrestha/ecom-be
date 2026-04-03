@@ -33,7 +33,7 @@ class CheckPermissionUseCase:
         """
         # Get permissions for roles (with caching)
         permissions = await self._get_permissions_for_roles(roles)
-
+    
         # Check permission using domain policy
         if not RbacPolicy.has_permission(permissions, required_permission):
             raise InsufficientPermissionsError(
@@ -56,7 +56,6 @@ class CheckPermissionUseCase:
         # Cache miss - query database
         async with self.uow:
             permissions = await self.uow.rbac.get_permissions_for_roles(roles)
-
         # Cache for future requests
         await self.cache.set(cache_key, permissions, self.cache_ttl_seconds)
 

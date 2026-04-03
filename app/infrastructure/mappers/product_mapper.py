@@ -27,7 +27,8 @@ class ProductMapper:
             created_by=model.created_by,
             updated_by=model.updated_by,
             images=[
-                ImageMapper.to_entity(image_model) for image_model in sorted(model.images, key=lambda img: img.position)
+                ImageMapper.to_entity(image_model) 
+                for image_model in model.images if model.images is not None
             ]
         )
 

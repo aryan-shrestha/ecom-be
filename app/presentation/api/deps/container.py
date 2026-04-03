@@ -12,6 +12,10 @@ from app.application.ports.crypto_port import PasswordHasherPort, TokenHasherPor
 from app.application.ports.file_storage_port import FileStoragePort
 from app.application.ports.jwt_port import JwtPort
 from app.application.use_cases.auth.change_password import ChangePasswordUseCase
+from app.application.use_cases.rbac.create_role import CreateRoleUseCase
+from app.application.use_cases.rbac.delete_role import DeleteRoleUseCase
+from app.application.use_cases.rbac.get_role_detail import GetRoleDetailUseCase
+from app.application.use_cases.rbac.list_roles import ListRolesUseCase
 from app.application.use_cases.users.deactivate_user_admin import DeactivateUserAdminUseCase
 from app.application.use_cases.users.get_user_admin import GetUserAdminUseCase
 from app.application.use_cases.users.list_user_admin import ListUsersAdminUseCase
@@ -206,6 +210,33 @@ class Container:
     def get_assign_role_use_case(self, session: AsyncSession) -> AssignRoleUseCase:
         """Get AssignRoleUseCase."""
         return AssignRoleUseCase(
+            uow=self.get_uow(session),
+            audit_log=self._audit_log,
+        )
+    
+    def get_roles_list_use_case(self, session: AsyncSession) -> ListRolesUseCase:
+        """Get ListRolesUseCase."""
+        return ListRolesUseCase(
+            uow=self.get_uow(session),
+        )
+    
+    def get_role_detail_use_case(self, session: AsyncSession) -> GetRoleDetailUseCase:
+        """Get GetRoleDetailUseCase."""
+        return GetRoleDetailUseCase(
+            uow=self.get_uow(session),
+        )
+    
+    def get_create_role_use_case(self, session: AsyncSession) -> CreateRoleUseCase:
+        """Get CreateRoleUseCase."""
+        return CreateRoleUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+
+    def get_delete_role_use_case(self, session: AsyncSession) -> DeleteRoleUseCase:
+        """Get DeleteRoleUseCase."""
+        return DeleteRoleUseCase(
             uow=self.get_uow(session),
             audit_log=self._audit_log,
         )

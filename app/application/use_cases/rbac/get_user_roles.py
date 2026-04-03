@@ -1,4 +1,5 @@
 from uuid import UUID
+from app.application.errors.app_errors import ResourceNotFoundError
 from app.application.interfaces.uow import UnitOfWork
 from app.application.dto.role_dto import RoleDTO, RoleListDTO
 
@@ -21,6 +22,11 @@ class GetUserRolesUseCase:
             list[str]: List of role names assigned to the user.
         """
         async with self.uow:
+            user = await self.uow.users.get_by_id(user_id)
+            
+            if not user:
+                raise ResourceNotFoundError(f"User with ID {user_id} not found")
+            
             roles = await self.uow.auth.get_user_roles(user_id)
             role_dtos = [
                 RoleDTO(

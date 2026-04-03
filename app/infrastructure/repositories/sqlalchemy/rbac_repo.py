@@ -1,7 +1,6 @@
 """SQLAlchemy implementation of RbacRepository."""
 
 from typing import Optional
-from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -103,3 +102,21 @@ class SqlAlchemyRbacRepository(RbacRepository):
         result = await self.session.execute(stmt)
         models = result.scalars().all()
         return [Permission(id=model.id, code=model.code) for model in models]
+
+    async def delete_role(self, role_name) -> None:
+        """Delete role by name."""
+        stmt = select(RoleModel).where(RoleModel.name == role_name)
+        result = await self.session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model:
+            await self.session.delete(model)
+            await self.session.flush()
+
+    async def delete_permission(self, permission_code) -> None:
+        """Delete permission by code."""
+        stmt = select(PermissionModel).where(PermissionModel.code == permission_code)
+        result = await self.session.execute(stmt)
+        model = result.scalar_one_or_none()
+        if model:
+            await self.session.delete(model)
+            await self.session.flush()

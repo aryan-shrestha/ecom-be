@@ -58,6 +58,14 @@ class SqlAlchemyProductRepository(ProductRepository):
         model = ProductMapper.to_model(product)
         self.session.add(model)
         await self.session.flush()
+
+        stmt = (
+            select(ProductModel)
+            .options(selectinload(ProductModel.images))
+            .where(ProductModel.id == model.id)
+        )
+        result = await self.session.execute(stmt)
+        model = result.scalar_one()
         return ProductMapper.to_entity(model)
 
     async def update(self, product: Product) -> Product:

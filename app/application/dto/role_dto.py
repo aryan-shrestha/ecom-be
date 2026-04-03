@@ -7,6 +7,7 @@ class RoleDTO:
 
     id: UUID
     name: str
+    
 
 @dataclass
 class RoleListDTO:

@@ -114,7 +114,7 @@ def require_permission(permission_code: str):
     ) -> None:
         """Check if principal has required permission."""
         use_case = container.get_check_permission_use_case(session)
-
+        
         try:
             await use_case.execute(principal.user_id, principal.roles, permission_code)
         except Exception:
