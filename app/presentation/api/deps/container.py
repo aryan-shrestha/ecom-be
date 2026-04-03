@@ -12,6 +12,7 @@ from app.application.ports.crypto_port import PasswordHasherPort, TokenHasherPor
 from app.application.ports.file_storage_port import FileStoragePort
 from app.application.ports.jwt_port import JwtPort
 from app.application.use_cases.auth.change_password import ChangePasswordUseCase
+from app.application.use_cases.users.deactivate_user_admin import DeactivateUserAdminUseCase
 from app.application.use_cases.users.get_user_admin import GetUserAdminUseCase
 from app.application.use_cases.users.list_user_admin import ListUsersAdminUseCase
 from app.application.use_cases.auth.login import LoginUseCase
@@ -220,6 +221,14 @@ class Container:
         """Get GetUserAdminUseCase."""
         return GetUserAdminUseCase(
             uow=self.get_uow(session),
+        )
+    
+    def get_deactivate_user_admin_use_case(self, session: AsyncSession) -> DeactivateUserAdminUseCase:
+        """Get DeactivateUserAdminUseCase."""
+        return DeactivateUserAdminUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
         )
 
     # Product use cases

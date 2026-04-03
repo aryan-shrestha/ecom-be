@@ -89,3 +89,30 @@ async def get_user(
         updated_at=user.updated_at,
         roles=role_list_response_schema
     )
+
+@router.get(
+        "/{user_id}/deactivate", 
+        response_model=UserResponseSchema, 
+        dependencies=[Depends(require_permission("users:write"))]
+)
+async def deactivate_user(
+    user_id: UUID,
+    current_principal: Annotated[PrincipalDTO, Depends(get_current_principal)],
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> UserDTO:
+    """Deactivate user by admin."""
+    use_case = container.get_deactivate_user_admin_use_case(session)
+    deactivated_user = await use_case.execute(user_id=user_id, deactivated_by=current_principal.user_id)
+
+    return UserResponseSchema(
+        id=deactivated_user.id,
+        email=str(deactivated_user.email),
+        first_name=deactivated_user.first_name,
+        last_name=deactivated_user.last_name,
+        is_active=deactivated_user.is_active,
+        is_verified=deactivated_user.is_verified,
+        created_at=deactivated_user.created_at,
+        updated_at=deactivated_user.updated_at,
+    )
+
