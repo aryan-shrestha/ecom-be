@@ -28,6 +28,9 @@ from app.application.use_cases.categories.get_category import GetCategoryUseCase
 from app.application.use_cases.categories.update_category import UpdateCategoryUseCase
 from app.application.use_cases.rbac.assign_role import AssignRoleUseCase
 from app.application.use_cases.rbac.check_permission import CheckPermissionUseCase
+from app.application.use_cases.rbac.list_permission import ListPermissionsUseCase
+from app.application.use_cases.rbac.create_permission import CreatePermissionUseCase
+from app.application.use_cases.rbac.delete_permission import DeletePermissionUseCase
 from app.application.use_cases.products.create_product import CreateProductUseCase
 from app.application.use_cases.products.update_product import UpdateProductUseCase
 from app.application.use_cases.products.publish_product import PublishProductUseCase
@@ -237,6 +240,28 @@ class Container:
     def get_delete_role_use_case(self, session: AsyncSession) -> DeleteRoleUseCase:
         """Get DeleteRoleUseCase."""
         return DeleteRoleUseCase(
+            uow=self.get_uow(session),
+            audit_log=self._audit_log,
+        )
+    
+    # Permission use cases
+    def get_list_permissions_use_case(self, session: AsyncSession) -> ListPermissionsUseCase:
+        """Get ListPermissions  UseCase."""
+        return ListPermissionsUseCase(
+            uow=self.get_uow(session),
+        )
+
+    def get_create_permission_use_case(self, session: AsyncSession) -> CreatePermissionUseCase:
+        """Get CreatePermissionUseCase."""
+        return CreatePermissionUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+    
+    def get_delete_permission_use_case(self, session: AsyncSession) -> DeletePermissionUseCase:
+        """Get DeletePermissionUseCase."""
+        return DeletePermissionUseCase(
             uow=self.get_uow(session),
             audit_log=self._audit_log,
         )

@@ -55,3 +55,8 @@ class RbacRepository(ABC):
     async def delete_role(self, role_name: str) -> None:
         """Delete role by name."""
         ...
+
+    @abstractmethod
+    async def delete_permission(self, permission_code: str) -> None:
+        """Delete permission by code."""
+        ...

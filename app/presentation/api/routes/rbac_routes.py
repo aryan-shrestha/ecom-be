@@ -16,6 +16,7 @@ from app.presentation.api.schemas.http_auth_schemas import (
     MessageResponseSchema,
 )
 from app.presentation.api.schemas.http_role_schemas import RoleCreateRequestSchema, RoleListResponseSchema, RoleResponseSchema
+from app.presentation.api.schemas.http_permission_schemas import PermissionResponseSchema, PermissionListResponseSchema, PermissionCreateRequestSchema
 
 router = APIRouter(prefix="/rbac", tags=["rbac"])
 
@@ -141,4 +142,77 @@ async def delete_role(
 
     return MessageResponseSchema(
         message=f"Role '{role_name}' deleted successfully"
+    )
+
+
+@router.get(
+    "/permissions",
+    response_model=PermissionListResponseSchema,
+    dependencies=[Depends(require_permission("permissions:read"))],
+)
+async def list_permissions(
+    session: AsyncSession = Depends(get_session),
+    principal: PrincipalDTO = Depends(get_current_principal),
+    container: Container = Depends(get_container),
+) -> PermissionListResponseSchema:
+    use_case = container.get_list_permissions_use_case(session)
+    permissions_dto = await use_case.execute()
+
+    return PermissionListResponseSchema(
+        permissions=[
+            PermissionResponseSchema(
+                id=str(permission.id), 
+                code=permission.code
+            ) for permission in permissions_dto.permissions
+        ]
+    )
+
+@router.post(
+    "/permissions",
+    response_model=PermissionResponseSchema,
+    dependencies=[Depends(require_permission("permissions:write"))],
+)
+async def create_permission(
+    permission_data: PermissionCreateRequestSchema,
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> PermissionResponseSchema:
+    
+    use_case = container.get_create_permission_use_case(session)
+
+    try:
+        permission_dto = await use_case.execute(permission_data.code, user_id=principal.user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return PermissionResponseSchema(
+        id=str(permission_dto.id),
+        code=permission_dto.code
+    )
+
+@router.delete(
+    "/permissions/{permission_code}",
+    response_model=MessageResponseSchema,
+    dependencies=[Depends(require_permission("permissions:write"))],
+)
+async def delete_permission(
+    permission_code: str,
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> MessageResponseSchema:
+    use_case = container.get_delete_permission_use_case(session)
+
+    try:
+        await use_case.execute(permission_code, user_id=principal.user_id)
+    except ResourceNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Permission not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return MessageResponseSchema(
+        message=f"Permission '{permission_code}' deleted successfully"
     )
