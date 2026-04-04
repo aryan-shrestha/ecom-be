@@ -15,7 +15,7 @@ from app.presentation.api.schemas.http_auth_schemas import (
     AssignRoleRequestSchema,
     MessageResponseSchema,
 )
-from app.presentation.api.schemas.http_role_schemas import RoleCreateRequestSchema, RoleListResponseSchema, RoleResponseSchema
+from app.presentation.api.schemas.http_role_schemas import AssignPermissionToRoleRequestSchema, RemovePermissionFromRoleRequestSchema, RoleCreateRequestSchema, RoleListResponseSchema, RoleResponseSchema
 from app.presentation.api.schemas.http_permission_schemas import PermissionResponseSchema, PermissionListResponseSchema, PermissionCreateRequestSchema
 
 router = APIRouter(prefix="/rbac", tags=["rbac"])
@@ -215,4 +215,89 @@ async def delete_permission(
 
     return MessageResponseSchema(
         message=f"Permission '{permission_code}' deleted successfully"
+    )
+
+
+@router.get(
+    "/roles/{role_name}/permissions",
+    response_model=PermissionListResponseSchema,
+    dependencies=[Depends(require_permission("roles:read"))],
+)
+async def get_permissions_for_role(
+    role_name: str,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> PermissionListResponseSchema:
+    
+    use_case = container.get_permission_for_role_use_case(session)
+    try:
+        permissions_dto = await use_case.execute(role_name)
+    except ResourceNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return PermissionListResponseSchema(
+        permissions=[
+            PermissionResponseSchema(
+                id=str(permission.id),
+                code=permission.code
+            ) for permission in permissions_dto
+        ]
+    )
+
+
+@router.post(
+    "/roles/{role_name}/assign-permission",
+    response_model=MessageResponseSchema,
+    dependencies=[Depends(require_permission("roles:write"))],
+)
+async def assign_permission_to_role(
+    role_name: str,
+    request_data: AssignPermissionToRoleRequestSchema,
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> MessageResponseSchema:
+    use_case = container.get_assign_permission_to_role_use_case(session)
+
+    try:
+        await use_case.execute(role_name, request_data.permission_code, user_id=principal.user_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return MessageResponseSchema(
+        message=f"Permission '{request_data.permission_code}' assigned to role '{role_name}' successfully"
+    )
+
+
+@router.post(
+    "/roles/{role_name}/remove-permission",
+    response_model=MessageResponseSchema,
+    dependencies=[Depends(require_permission("roles:write"))],
+)
+async def remove_permission_from_role(
+    role_name: str,
+    request_data: RemovePermissionFromRoleRequestSchema,
+    principal: PrincipalDTO = Depends(get_current_principal),
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> MessageResponseSchema:
+    use_case = container.get_remove_permission_from_role_use_case(session)
+
+    try:
+        await use_case.execute(role_name, request_data.permission_code, user_id=principal.user_id)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+    return MessageResponseSchema(
+        message=f"Permission '{request_data.permission_code}' removed from role '{role_name}' successfully"
     )

@@ -89,6 +89,32 @@ class SqlAlchemyRbacRepository(RbacRepository):
         self.session.add(role_permission)
         await self.session.flush()
 
+    async def remove_permission_from_role(self, role_name: str, permission_code: str) -> None:
+        """Remove permission from role."""
+        # Get role and permission IDs
+        role_stmt = select(RoleModel.id).where(RoleModel.name == role_name)
+        perm_stmt = select(PermissionModel.id).where(PermissionModel.code == permission_code)
+
+        role_result = await self.session.execute(role_stmt)
+        perm_result = await self.session.execute(perm_stmt)
+
+        role_id = role_result.scalar_one()
+        permission_id = perm_result.scalar_one()
+
+        # Remove assignment
+        delete_stmt = (
+            select(RolePermissionModel)
+            .where(
+                RolePermissionModel.role_id == role_id,
+                RolePermissionModel.permission_id == permission_id,
+            )
+        )
+        delete_result = await self.session.execute(delete_stmt)
+        model = delete_result.scalar_one_or_none()
+        if model:
+            await self.session.delete(model)
+            await self.session.flush()
+
     async def list_all_roles(self) -> list[Role]:
         """List all roles."""
         stmt = select(RoleModel)

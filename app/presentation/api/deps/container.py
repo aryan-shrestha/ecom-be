@@ -12,10 +12,12 @@ from app.application.ports.crypto_port import PasswordHasherPort, TokenHasherPor
 from app.application.ports.file_storage_port import FileStoragePort
 from app.application.ports.jwt_port import JwtPort
 from app.application.use_cases.auth.change_password import ChangePasswordUseCase
+from app.application.use_cases.rbac.assign_permission_to_role import AssignPermissionToRoleUseCase
 from app.application.use_cases.rbac.create_role import CreateRoleUseCase
 from app.application.use_cases.rbac.delete_role import DeleteRoleUseCase
 from app.application.use_cases.rbac.get_role_detail import GetRoleDetailUseCase
 from app.application.use_cases.rbac.list_roles import ListRolesUseCase
+from app.application.use_cases.rbac.remove_permission_from_role import RemovePermissionFromRoleUseCase
 from app.application.use_cases.users.deactivate_user_admin import DeactivateUserAdminUseCase
 from app.application.use_cases.users.get_user_admin import GetUserAdminUseCase
 from app.application.use_cases.users.list_user_admin import ListUsersAdminUseCase
@@ -31,6 +33,7 @@ from app.application.use_cases.rbac.check_permission import CheckPermissionUseCa
 from app.application.use_cases.rbac.list_permission import ListPermissionsUseCase
 from app.application.use_cases.rbac.create_permission import CreatePermissionUseCase
 from app.application.use_cases.rbac.delete_permission import DeletePermissionUseCase
+from app.application.use_cases.rbac.get_permission_for_role import GetPermissionForRoleUseCase
 from app.application.use_cases.products.create_product import CreateProductUseCase
 from app.application.use_cases.products.update_product import UpdateProductUseCase
 from app.application.use_cases.products.publish_product import PublishProductUseCase
@@ -262,6 +265,26 @@ class Container:
     def get_delete_permission_use_case(self, session: AsyncSession) -> DeletePermissionUseCase:
         """Get DeletePermissionUseCase."""
         return DeletePermissionUseCase(
+            uow=self.get_uow(session),
+            audit_log=self._audit_log,
+        )
+    
+    def get_permission_for_role_use_case(self, session: AsyncSession) -> GetPermissionForRoleUseCase:
+        """Get GetPermissionForRoleUseCase."""
+        return GetPermissionForRoleUseCase(
+            uow=self.get_uow(session),
+        )
+    
+    def get_assign_permission_to_role_use_case(self, session: AsyncSession) -> AssignPermissionToRoleUseCase:
+        """Get AssignPermissionToRoleUseCase."""
+        return AssignPermissionToRoleUseCase(
+            uow=self.get_uow(session),
+            audit_log=self._audit_log,
+        )
+    
+    def get_remove_permission_from_role_use_case(self, session: AsyncSession) -> RemovePermissionFromRoleUseCase:
+        """Get RemovePermissionFromRoleUseCase."""
+        return RemovePermissionFromRoleUseCase(
             uow=self.get_uow(session),
             audit_log=self._audit_log,
         )
