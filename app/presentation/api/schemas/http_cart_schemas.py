@@ -6,10 +6,15 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+
 class CartItemResponseSchema(BaseModel):
     id: UUID
     cart_id: UUID
     variant_id: UUID
+    product_id: UUID
+    product_name: str
+    product_slug: str
+    variant_images: list[str]
     quantity: int
     unit_price_amount: int
     unit_price_currency: str

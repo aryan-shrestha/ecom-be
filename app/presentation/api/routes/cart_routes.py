@@ -8,6 +8,7 @@ from fastapi import APIRouter, Cookie, Depends, Header, HTTPException, Request, 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.dto.cart_dto import (
+    CartDTO,
     AddCartItemRequest,
     ClearCartRequest,
     GetCartRequest,
@@ -37,6 +38,7 @@ GUEST_TOKEN_TTL = 90 * 24 * 60 * 60  # 90 days
 # ---------------------------------------------------------------------------
 
 async def get_optional_principal(
+    request: Request,
     authorization: Annotated[Optional[str], Header()] = None,
     session: AsyncSession = Depends(get_session),
     container: Container = Depends(get_container),
@@ -48,29 +50,11 @@ async def get_optional_principal(
     from fastapi import Request as _Request
 
     try:
-        import jwt as _jwt  # noqa: F401
-        jwt_service = container.get_jwt_service()
-        token = authorization.replace("Bearer ", "")
-        claims = jwt_service.verify_access_token(token)
-        import uuid as _uuid
-        user_id = _uuid.UUID(claims["sub"])
-        roles = claims.get("roles", [])
-        token_version = claims.get("ver", 0)
-
-        from app.infrastructure.uow.sqlalchemy_uow import SqlAlchemyUnitOfWork
-        uow = SqlAlchemyUnitOfWork(session)
-        async with uow:
-            user = await uow.users.get_by_id(user_id)
-
-        if not user or not user.is_active or user.token_version != token_version:
-            return None
-
-        return PrincipalDTO(
-            user_id=user.id,
-            email=str(user.email),
-            roles=roles,
-            token_version=user.token_version,
-            is_active=user.is_active,
+        return await get_current_principal(
+            request=_Request(scope=request.scope, receive=request.receive, send=request.send),
+            authorization=authorization,
+            session=session,
+            container=container,
         )
     except Exception:
         return None
@@ -102,22 +86,26 @@ def _set_guest_cookie(response: Response, token: str) -> None:
     )
 
 
-def _build_cart_response(dto) -> CartResponseSchema:
+def _build_cart_response(dto: CartDTO) -> CartResponseSchema:
     return CartResponseSchema(
         id=dto.id,
         status=dto.status,
         user_id=dto.user_id,
         items=[
             CartItemResponseSchema(
-                id=i.id,
-                cart_id=i.cart_id,
-                variant_id=i.variant_id,
-                quantity=i.quantity,
-                unit_price_amount=i.unit_price_amount,
-                unit_price_currency=i.unit_price_currency,
-                line_subtotal_amount=i.line_subtotal_amount,
+                id=item.id,
+                cart_id=item.cart_id,
+                variant_id=item.variant_id,
+                product_id=item.product_id,
+                product_name=item.product_name,
+                product_slug=item.product_slug,
+                variant_images=item.variant_images,
+                quantity=item.quantity,
+                unit_price_amount=item.unit_price_amount,
+                unit_price_currency=item.unit_price_currency,
+                line_subtotal_amount=item.line_subtotal_amount,
             )
-            for i in dto.items
+            for item in dto.items
         ],
         subtotal_amount=dto.subtotal_amount,
         subtotal_currency=dto.subtotal_currency,

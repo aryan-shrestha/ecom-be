@@ -5,12 +5,17 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from app.application.dto.product_dto import ColorDTO, MoneyDTO
 
 @dataclass
 class CartItemDTO:
     id: UUID
     cart_id: UUID
     variant_id: UUID
+    product_id: UUID
+    product_name: str
+    product_slug: str
+    variant_images: list[str]
     quantity: int
     unit_price_amount: int
     unit_price_currency: str

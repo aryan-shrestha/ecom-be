@@ -19,18 +19,10 @@ class SqlAlchemyCartRepository(CartRepository):
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    # ------------------------------------------------------------------
-    # Private helpers
-    # ------------------------------------------------------------------
-
     async def _load_items(self, cart_id: UUID) -> tuple[CartItem, ...]:
         stmt = select(CartItemModel).where(CartItemModel.cart_id == cart_id)
         result = await self.session.execute(stmt)
         return tuple(CartItemMapper.to_entity(m) for m in result.scalars().all())
-
-    # ------------------------------------------------------------------
-    # CartRepository interface
-    # ------------------------------------------------------------------
 
     async def get_by_id(self, cart_id: UUID) -> Optional[Cart]:
         stmt = select(CartModel).where(CartModel.id == cart_id)
