@@ -471,10 +471,8 @@ async def update_variant(
             compare_at_price_currency=request_data.compare_at_price_currency,
             cost_amount=request_data.cost_amount,
             cost_currency=request_data.cost_currency,
-            weight=request_data.weight,
-            length=request_data.length,
-            width=request_data.width,
-            height=request_data.height,
+            size=request_data.size,
+            color=request_data.color,
         )
         result = await use_case.execute(request)
 

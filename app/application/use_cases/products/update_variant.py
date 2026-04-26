@@ -58,10 +58,8 @@ class UpdateVariantUseCase:
                 price=price,
                 compare_at_price=compare_at_price,
                 cost=cost,
-                weight=request.weight,
-                length=request.length,
-                width=request.width,
-                height=request.height,
+                color=request.color,
+                size=request.size,
                 updated_at=now,
             )
 
@@ -100,10 +98,8 @@ class UpdateVariantUseCase:
                     if updated_variant.cost
                     else None
                 ),
-                weight=updated_variant.weight,
-                length=updated_variant.length,
-                width=updated_variant.width,
-                height=updated_variant.height,
+                size=updated_variant.size,
+                color=updated_variant.color,
                 is_default=updated_variant.is_default,
                 created_at=updated_variant.created_at,
                 updated_at=updated_variant.updated_at,
