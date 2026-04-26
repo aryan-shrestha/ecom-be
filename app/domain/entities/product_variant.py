@@ -16,6 +16,26 @@ class VariantStatus(Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
 
+@dataclass(frozen=True)
+class Color:
+    """Variant color."""
+
+    name: str
+    hex_code: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not self.name or not self.name.strip():
+            raise ValueError("Color name cannot be empty")
+
+        object.__setattr__(self, "name", self.name.strip())
+
+        if self.hex_code is not None:
+            hex_code = self.hex_code.strip()
+
+            if not hex_code.startswith("#") or len(hex_code) != 7:
+                raise ValueError("Color hex code must be in format #RRGGBB")
+
+            object.__setattr__(self, "hex_code", hex_code.upper())
 
 @dataclass(frozen=True)
 class ProductVariant:
@@ -29,10 +49,8 @@ class ProductVariant:
     price: Money
     compare_at_price: Optional[Money]
     cost: Optional[Money]
-    weight: Optional[int]  # grams
-    length: Optional[int]  # millimeters
-    width: Optional[int]  # millimeters
-    height: Optional[int]  # millimeters
+    color: Optional[Color]
+    size: Optional[str]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -41,14 +59,8 @@ class ProductVariant:
         """Validate variant invariants."""
         if self.barcode and len(self.barcode) > 100:
             raise ValueError("Barcode cannot exceed 100 characters")
-        if self.weight is not None and self.weight < 0:
-            raise ValueError("Weight cannot be negative")
-        if self.length is not None and self.length < 0:
-            raise ValueError("Length cannot be negative")
-        if self.width is not None and self.width < 0:
-            raise ValueError("Width cannot be negative")
-        if self.height is not None and self.height < 0:
-            raise ValueError("Height cannot be negative")
+        if self.size and len(self.size) > 3:
+            raise ValueError("Size cannot exceed 3 characters")
         # Compare at price should be same currency as price
         if self.compare_at_price and self.compare_at_price.currency != self.price.currency:
             raise ValueError("Compare at price must have same currency as price")
@@ -70,10 +82,8 @@ class ProductVariant:
             price=self.price,
             compare_at_price=self.compare_at_price,
             cost=self.cost,
-            weight=self.weight,
-            length=self.length,
-            width=self.width,
-            height=self.height,
+            color=self.color,
+            size=self.size,
             is_default=self.is_default,
             created_at=self.created_at,
             updated_at=updated_at,
@@ -86,10 +96,8 @@ class ProductVariant:
         price: Money,
         compare_at_price: Optional[Money],
         cost: Optional[Money],
-        weight: Optional[int],
-        length: Optional[int],
-        width: Optional[int],
-        height: Optional[int],
+        color: Optional[Color],
+        size: Optional[str],
         updated_at: datetime,
     ) -> "ProductVariant":
         """Return new variant with updated details."""
@@ -102,10 +110,8 @@ class ProductVariant:
             price=price,
             compare_at_price=compare_at_price,
             cost=cost,
-            weight=weight,
-            length=length,
-            width=width,
-            height=height,
+            color=color,
+            size=size,
             is_default=self.is_default,
             created_at=self.created_at,
             updated_at=updated_at,

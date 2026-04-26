@@ -2,11 +2,12 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from sqlalchemy import Boolean, Integer, String, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.ext.mutable import MutableDict
 
 from app.infrastructure.db.sqlalchemy.base import Base
 
@@ -37,10 +38,8 @@ class ProductVariantModel(Base):
     cost_currency: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     
     # Dimensions - map to actual DB column names
-    weight: Mapped[Optional[int]] = mapped_column("weight_grams", Integer, nullable=True)  # grams
-    length: Mapped[Optional[int]] = mapped_column("length_mm", Integer, nullable=True)  # mm
-    width: Mapped[Optional[int]] = mapped_column("width_mm", Integer, nullable=True)  # mm
-    height: Mapped[Optional[int]] = mapped_column("height_mm", Integer, nullable=True)  # mm
+    color: Mapped[Optional[dict[str, Any]]] = mapped_column(MutableDict.as_mutable(JSONB), nullable=True, default=dict)
+    size: Mapped[Optional[str]] = mapped_column(String(3), nullable=True)
     
     is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(nullable=False)

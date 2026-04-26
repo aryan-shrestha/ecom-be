@@ -17,9 +17,17 @@ class MoneySchema(BaseModel):
     currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
 
 
+class ColorSchema(BaseModel):
+    """Variant color."""
+
+    name: str = Field(..., min_length=1, max_length=50)
+    hex_code: Optional[str] = Field(
+        None,
+        pattern=r"^#([A-Fa-f0-9]{6})$",
+        description="Hex code in format #RRGGBB",
+    )
+
 # Product schemas
-
-
 class CreateProductRequestSchema(BaseModel):
     """Request to create product."""
 
@@ -75,10 +83,8 @@ class CreateVariantRequestSchema(BaseModel):
     compare_at_price_currency: Optional[str] = Field(None, min_length=3, max_length=3)
     cost_amount: Optional[int] = Field(None, gt=0)
     cost_currency: Optional[str] = Field(None, min_length=3, max_length=3)
-    weight: Optional[int] = Field(None, ge=0)
-    length: Optional[int] = Field(None, ge=0)
-    width: Optional[int] = Field(None, ge=0)
-    height: Optional[int] = Field(None, ge=0)
+    color: Optional[ColorSchema] = Field(None)
+    size: Optional[str] = Field(None, max_length=3)
     is_default: bool = False
     initial_stock: int = Field(default=0, ge=0)
     allow_backorder: bool = False
@@ -95,11 +101,8 @@ class UpdateVariantRequestSchema(BaseModel):
     compare_at_price_currency: Optional[str] = Field(None, min_length=3, max_length=3)
     cost_amount: Optional[int] = Field(None, gt=0)
     cost_currency: Optional[str] = Field(None, min_length=3, max_length=3)
-    weight: Optional[int] = Field(None, ge=0)
-    length: Optional[int] = Field(None, ge=0)
-    width: Optional[int] = Field(None, ge=0)
-    height: Optional[int] = Field(None, ge=0)
-
+    color: Optional[ColorSchema] = Field(None)
+    size: Optional[str] = Field(None, max_length=3)
 
 class VariantResponseSchema(BaseModel):
     """Variant response."""
@@ -112,10 +115,8 @@ class VariantResponseSchema(BaseModel):
     price: MoneySchema
     compare_at_price: Optional[MoneySchema]
     cost: Optional[MoneySchema]
-    weight: Optional[int]
-    length: Optional[int]
-    width: Optional[int]
-    height: Optional[int]
+    color: Optional[ColorSchema]
+    size: Optional[str]
     is_default: bool
     created_at: datetime
     updated_at: datetime

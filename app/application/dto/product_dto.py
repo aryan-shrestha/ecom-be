@@ -15,6 +15,13 @@ class MoneyDTO:
 
 
 @dataclass
+class ColorDTO:
+    """Variant color."""
+
+    name: str
+    hex_code: Optional[str] = None
+
+@dataclass
 class ProductDTO:
     """Product data transfer object."""
 
@@ -46,10 +53,8 @@ class VariantDTO:
     price: MoneyDTO
     compare_at_price: Optional[MoneyDTO]
     cost: Optional[MoneyDTO]
-    weight: Optional[int]
-    length: Optional[int]
-    width: Optional[int]
-    height: Optional[int]
+    color: Optional[ColorDTO]
+    size: Optional[str]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -172,10 +177,8 @@ class CreateVariantRequest:
     compare_at_price_currency: Optional[str] = None
     cost_amount: Optional[int] = None
     cost_currency: Optional[str] = None
-    weight: Optional[int] = None
-    length: Optional[int] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
+    color: Optional[ColorDTO] = None
+    size: Optional[str] = None
     is_default: bool = False
     initial_stock: int = 0
     allow_backorder: bool = False
@@ -194,11 +197,8 @@ class UpdateVariantRequest:
     compare_at_price_currency: Optional[str]
     cost_amount: Optional[int]
     cost_currency: Optional[str]
-    weight: Optional[int]
-    length: Optional[int]
-    width: Optional[int]
-    height: Optional[int]
-
+    color: Optional[ColorDTO]
+    size: Optional[str]
 
 @dataclass
 class AdjustStockRequest:

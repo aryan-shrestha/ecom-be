@@ -1,6 +1,6 @@
 """Product variant mapper."""
 
-from app.domain.entities.product_variant import ProductVariant, VariantStatus
+from app.domain.entities.product_variant import ProductVariant, VariantStatus, Color
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.sku import SKU
 from app.infrastructure.db.sqlalchemy.models.product_variant_model import ProductVariantModel
@@ -33,10 +33,8 @@ class VariantMapper:
             price=price,
             compare_at_price=compare_at_price,
             cost=cost,
-            weight=model.weight,
-            length=model.length,
-            width=model.width,
-            height=model.height,
+            color=Color(name=model.color["name"], hex_code=model.color.get("hex_code")) if model.color else None,
+            size=model.size,
             is_default=model.is_default,
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -61,10 +59,8 @@ class VariantMapper:
             ),
             cost_amount=entity.cost.amount if entity.cost else None,
             cost_currency=entity.cost.currency if entity.cost else None,
-            weight=entity.weight,
-            length=entity.length,
-            width=entity.width,
-            height=entity.height,
+            color={"name": entity.color.name, "hex_code": entity.color.hex_code} if entity.color else None,
+            size=entity.size,
             is_default=entity.is_default,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
@@ -86,9 +82,7 @@ class VariantMapper:
         )
         model.cost_amount = entity.cost.amount if entity.cost else None
         model.cost_currency = entity.cost.currency if entity.cost else None
-        model.weight = entity.weight
-        model.length = entity.length
-        model.width = entity.width
-        model.height = entity.height
+        model.color = {"name": entity.color.name, "hex_code": entity.color.hex_code} if entity.color else None
+        model.size = entity.size
         model.is_default = entity.is_default
         model.updated_at = entity.updated_at
