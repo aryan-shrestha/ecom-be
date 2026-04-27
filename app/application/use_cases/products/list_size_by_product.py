@@ -1,19 +1,19 @@
 import uuid
-from app.application.dto.color_dto import ColorDTO
+from app.application.dto.size_dto import SizeDTO
 from app.application.interfaces.uow import UnitOfWork
 from app.application.errors.app_errors import ResourceNotFoundError
 
 
-class ListColorByProductUseCase:
+class ListSizeByProductUseCase:
     def __init__(
         self,
         uow: UnitOfWork,
     ) -> None:
         self.uow = uow
     
-    async def execute(self, product_id: uuid.UUID) -> list[ColorDTO]:
+    async def execute(self, product_id: uuid.UUID) -> list[SizeDTO]:
         """
-        List colors by product.
+        List sizes by product.
 
         Raises:
             ResourceNotFoundError: If product not found
@@ -24,16 +24,14 @@ class ListColorByProductUseCase:
             if not product:
                 raise ResourceNotFoundError(f"Product {product_id} not found")
 
-            colors = await self.uow.colors.list_by_product_id(product_id)
+            sizes = await self.uow.sizes.list_by_product_id(product_id)
 
             return [
-                ColorDTO(
-                    name=color.name,
-                    hex_value=color.hex_value,
-                    created_at=color.created_at,
-                    updated_at=color.updated_at,
-                    product_id=color.product_id,
+                SizeDTO(
+                    name=size.name,
+                    created_at=size.created_at,
+                    updated_at=size.updated_at,
+                    product_id=size.product_id,
                 )
-                for color in colors
+                for size in sizes
             ]
-    

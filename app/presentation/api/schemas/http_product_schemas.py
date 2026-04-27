@@ -329,3 +329,18 @@ class ColorResponseSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
     product_id: UUID
+
+
+class SizeCreateRequestSchema(BaseModel):
+    """Request to create size."""
+
+    name: str = Field(..., min_length=1, max_length=50)
+    product_id: UUID
+
+class SizeResponseSchema(BaseModel):
+    """Size response."""
+
+    name: str
+    created_at: datetime
+    updated_at: datetime
+    product_id: UUID

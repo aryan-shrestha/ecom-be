@@ -9,6 +9,7 @@ class SizeDTO:
     """Variant size."""
 
     name: str
+    product_id: UUID
     created_at: datetime
     updated_at: datetime
 

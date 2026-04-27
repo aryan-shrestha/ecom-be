@@ -22,6 +22,10 @@ class ColorDTO:
     hex_code: Optional[str] = None
 
 @dataclass
+class SizeDTO:
+    name: str
+
+@dataclass
 class ProductDTO:
     """Product data transfer object."""
 
@@ -54,7 +58,7 @@ class VariantDTO:
     compare_at_price: Optional[MoneyDTO]
     cost: Optional[MoneyDTO]
     color: Optional[ColorDTO]
-    size: Optional[str]
+    size: Optional[SizeDTO]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -178,7 +182,7 @@ class CreateVariantRequest:
     cost_amount: Optional[int] = None
     cost_currency: Optional[str] = None
     color: Optional[ColorDTO] = None
-    size: Optional[str] = None
+    size: Optional[SizeDTO] = None
     is_default: bool = False
     initial_stock: int = 0
     allow_backorder: bool = False
@@ -198,7 +202,7 @@ class UpdateVariantRequest:
     cost_amount: Optional[int]
     cost_currency: Optional[str]
     color: Optional[ColorDTO]
-    size: Optional[str]
+    size: Optional[SizeDTO]
 
 @dataclass
 class AdjustStockRequest:

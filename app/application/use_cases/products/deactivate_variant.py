@@ -78,10 +78,8 @@ class DeactivateVariantUseCase:
                     if deactivated_variant.cost
                     else None
                 ),
-                weight=deactivated_variant.weight,
-                length=deactivated_variant.length,
-                width=deactivated_variant.width,
-                height=deactivated_variant.height,
+                size=None,
+                color=None,
                 is_default=deactivated_variant.is_default,
                 created_at=deactivated_variant.created_at,
                 updated_at=deactivated_variant.updated_at,

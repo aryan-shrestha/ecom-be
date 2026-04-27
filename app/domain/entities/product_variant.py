@@ -31,8 +31,8 @@ class ProductVariant:
     price: Money
     compare_at_price: Optional[Money]
     cost: Optional[Money]
-    color: Optional[Color]
-    size: Optional[Size]
+    color_id: Optional[UUID]
+    size_id: Optional[UUID]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -41,8 +41,8 @@ class ProductVariant:
         """Validate variant invariants."""
         if self.barcode and len(self.barcode) > 100:
             raise ValueError("Barcode cannot exceed 100 characters")
-        if self.size and len(self.size.name) > 50:
-            raise ValueError("Size name cannot exceed 50 characters")
+        if self.size_id and len(self.size_id) > 50:
+            raise ValueError("Size ID cannot exceed 50 characters")
         # Compare at price should be same currency as price
         if self.compare_at_price and self.compare_at_price.currency != self.price.currency:
             raise ValueError("Compare at price must have same currency as price")
@@ -64,8 +64,8 @@ class ProductVariant:
             price=self.price,
             compare_at_price=self.compare_at_price,
             cost=self.cost,
-            color=self.color,
-            size=self.size,
+            color_id=self.color_id,
+            size_id=self.size_id,
             is_default=self.is_default,
             created_at=self.created_at,
             updated_at=updated_at,
@@ -78,8 +78,8 @@ class ProductVariant:
         price: Money,
         compare_at_price: Optional[Money],
         cost: Optional[Money],
-        color: Optional[Color],
-        size: Optional[Size],
+        color_id: Optional[UUID],
+        size_id: Optional[UUID],
         updated_at: datetime,
     ) -> "ProductVariant":
         """Return new variant with updated details."""
@@ -92,8 +92,8 @@ class ProductVariant:
             price=price,
             compare_at_price=compare_at_price,
             cost=cost,
-            color=color,
-            size=size,
+            color_id=color_id,
+            size_id=size_id,
             is_default=self.is_default,
             created_at=self.created_at,
             updated_at=updated_at,

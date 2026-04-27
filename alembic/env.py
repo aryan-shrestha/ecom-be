@@ -27,6 +27,8 @@ from app.infrastructure.db.sqlalchemy.models.product_image_model import ProductI
 from app.infrastructure.db.sqlalchemy.models.stock_movement_model import StockMovementModel
 from app.infrastructure.db.sqlalchemy.models.inventory_model import InventoryModel
 from app.infrastructure.db.sqlalchemy.models.variant_image_model import VariantImageModel
+from app.infrastructure.db.sqlalchemy.models.color_model import ColorModel
+from app.infrastructure.db.sqlalchemy.models.size_model import SizeModel
 
 # Cart + Order models
 from app.infrastructure.db.sqlalchemy.models.cart_model import CartModel

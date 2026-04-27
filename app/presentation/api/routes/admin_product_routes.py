@@ -54,6 +54,8 @@ from app.presentation.api.schemas.http_product_schemas import (
     CategoryResponseSchema,
     ColorCreateRequestSchema,
     ColorResponseSchema,
+    SizeCreateRequestSchema,
+    SizeResponseSchema,
 )
 from app.presentation.api.schemas.http_auth_schemas import MessageResponseSchema
 
@@ -231,10 +233,8 @@ async def get_product(
                     cost=(
                         MoneySchema(amount=v.cost.amount, currency=v.cost.currency) if v.cost else None
                     ),
-                    weight=v.weight,
-                    length=v.length,
-                    width=v.width,
-                    height=v.height,
+                    color=None,
+                    size=None,
                     is_default=v.is_default,
                     created_at=v.created_at,
                     updated_at=v.updated_at,
@@ -916,5 +916,85 @@ async def remove_color_from_product(
     try:
         await use_case.execute(product_id, color_id)
         return MessageResponseSchema(message="Color removed from product successfully", status=status.HTTP_204_NO_CONTENT)
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{product_id}/sizes",
+    response_model=list[SizeResponseSchema],
+    dependencies=[Depends(require_permission("products:read"))],
+)
+async def list_sizes_by_product(
+    product_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> list[SizeResponseSchema]:
+    """List sizes for a product."""
+    use_case = container.get_list_size_by_product_use_case(session)
+
+    try:
+        sizes = await use_case.execute(product_id)
+        return [
+            SizeResponseSchema(
+                name=size.name,
+                created_at=size.created_at,
+                updated_at=size.updated_at,
+                product_id=product_id
+            )
+            for size in sizes
+        ]
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    
+
+@router.post(
+    "/{product_id}/sizes/",
+    response_model=SizeResponseSchema,
+    dependencies=[Depends(require_permission("products:write"))],
+)
+async def add_size_to_product(
+    product_id: UUID,
+    request_data: SizeCreateRequestSchema,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> SizeResponseSchema:
+    """Add size option to product."""
+    use_case = container.get_add_size_use_case(session)
+    size_create_request = SizeCreateRequest(
+        name=request_data.name,
+        product_id=product_id
+    )
+    try:
+        size = await use_case.execute(size_create_request)
+        return SizeResponseSchema(
+            name=size.name,
+            created_at=size.created_at,
+            updated_at=size.updated_at,
+            product_id=size_create_request.product_id
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    
+
+@router.delete(
+    "/{product_id}/sizes/{size_id}",
+    response_model=MessageResponseSchema,
+    dependencies=[Depends(require_permission("products:write"))],
+)
+async def remove_size_from_product(
+    product_id: UUID,
+    size_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+):
+    """Remove size option from product."""
+    use_case = container.get_remove_size_use_case(session)
+
+    try:
+        await use_case.execute(product_id, size_id)
+        return MessageResponseSchema(message="Size removed from product successfully", status=status.HTTP_204_NO_CONTENT)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

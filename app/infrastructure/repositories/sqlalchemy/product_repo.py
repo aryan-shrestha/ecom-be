@@ -32,7 +32,6 @@ class SqlAlchemyProductRepository(ProductRepository):
     async def get_by_id(self, product_id: UUID) -> Optional[Product]:
         """Retrieve product by ID."""
         stmt = (select(ProductModel)
-                .options(selectinload(ProductModel.images))
                 .where(ProductModel.id == product_id))
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -41,7 +40,6 @@ class SqlAlchemyProductRepository(ProductRepository):
     async def get_by_slug(self, slug: Slug) -> Optional[Product]:
         """Retrieve product by slug."""
         stmt = (select(ProductModel)
-                .options(selectinload(ProductModel.images))
                 .where(ProductModel.slug == str(slug)))
         result = await self.session.execute(stmt)
         model = result.scalar_one_or_none()
@@ -61,7 +59,6 @@ class SqlAlchemyProductRepository(ProductRepository):
 
         stmt = (
             select(ProductModel)
-            .options(selectinload(ProductModel.images))
             .where(ProductModel.id == model.id)
         )
         result = await self.session.execute(stmt)
@@ -98,7 +95,6 @@ class SqlAlchemyProductRepository(ProductRepository):
         # Build query
         query = (
             select(ProductModel)
-            .options(selectinload(ProductModel.images))
         )
 
         # Apply filters

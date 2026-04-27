@@ -35,5 +35,3 @@ class ProductImageModel(Base):
     width: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     format: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
-
-    product: Mapped['ProductModel'] = relationship("ProductModel", back_populates="images")

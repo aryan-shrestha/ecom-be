@@ -69,6 +69,9 @@ from app.application.use_cases.orders.admin_cancel_order import AdminCancelOrder
 from app.application.use_cases.products.add_color import AddColorUseCase
 from app.application.use_cases.products.remove_color import RemoveColorUseCase
 from app.application.use_cases.products.list_color_by_product import ListColorByProductUseCase
+from app.application.use_cases.products.list_size_by_product import ListSizeByProductUseCase
+from app.application.use_cases.products.add_size import AddSizeUseCase
+from app.application.use_cases.products.remove_size import RemoveSizeUseCase
 from app.infrastructure.caching.memory_cache import MemoryCache
 from app.infrastructure.caching.system_clock import SystemClock
 from app.infrastructure.observability.audit_logger import StructuredAuditLogger
@@ -486,6 +489,29 @@ class Container:
         """Get ListColorByProductUseCase."""
         return ListColorByProductUseCase(
             uow=self.get_uow(session),
+        )
+    
+    # Size use cases
+    def get_list_size_by_product_use_case(self, session: AsyncSession) -> ListSizeByProductUseCase:
+        """Get ListSizeByProductUseCase."""
+        return ListSizeByProductUseCase(
+            uow=self.get_uow(session),
+        )
+
+    def get_add_size_use_case(self, session: AsyncSession) -> AddSizeUseCase:
+        """Get AddSizeUseCase."""
+        return AddSizeUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+    
+    def get_remove_size_use_case(self, session: AsyncSession) -> RemoveSizeUseCase:
+        """Get RemoveSizeUseCase."""
+        return RemoveSizeUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
         )
 
     # Category use cases

@@ -36,7 +36,7 @@ class GetProductAdminUseCase:
 
             # Get variants
             variants = await self.uow.products.get_variants_for_product(product_id)
-
+            
             # Get images
             images = await self.uow.products.get_images_for_product(product_id)
 
@@ -106,10 +106,8 @@ class GetProductAdminUseCase:
                         cost=(
                             MoneyDTO(amount=v.cost.amount, currency=v.cost.currency) if v.cost else None
                         ),
-                        weight=v.weight,
-                        length=v.length,
-                        width=v.width,
-                        height=v.height,
+                        size=None,
+                        color=None,
                         is_default=v.is_default,
                         created_at=v.created_at,
                         updated_at=v.updated_at,

@@ -33,8 +33,8 @@ class VariantMapper:
             price=price,
             compare_at_price=compare_at_price,
             cost=cost,
-            color=Color(name=model.color["name"], hex_code=model.color.get("hex_code")) if model.color else None,
-            size=model.size,
+            color_id=model.color_id,
+            size_id=model.size_id,
             is_default=model.is_default,
             created_at=model.created_at,
             updated_at=model.updated_at,
@@ -59,8 +59,8 @@ class VariantMapper:
             ),
             cost_amount=entity.cost.amount if entity.cost else None,
             cost_currency=entity.cost.currency if entity.cost else None,
-            color={"name": entity.color.name, "hex_code": entity.color.hex_code} if entity.color else None,
-            size=entity.size,
+            color_id=entity.color_id,
+            size_id=entity.size_id,
             is_default=entity.is_default,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
@@ -82,7 +82,7 @@ class VariantMapper:
         )
         model.cost_amount = entity.cost.amount if entity.cost else None
         model.cost_currency = entity.cost.currency if entity.cost else None
-        model.color = {"name": entity.color.name, "hex_code": entity.color.hex_code} if entity.color else None
-        model.size = entity.size
+        model.color_id = entity.color_id
+        model.size_id = entity.size_id
         model.is_default = entity.is_default
         model.updated_at = entity.updated_at
