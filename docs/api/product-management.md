@@ -188,10 +188,10 @@ Monetary amounts are represented in **minor units** (cents for USD) to avoid flo
 | `price`            | MoneySchema | Yes      | Selling price                            | `{"amount": 7999, "currency": "USD"}`    |
 | `compare_at_price` | MoneySchema | No       | Original price (for discounts)           | `{"amount": 9999, "currency": "USD"}`    |
 | `cost`             | MoneySchema | No       | Cost basis (admin only)                  | `{"amount": 4500, "currency": "USD"}`    |
-| `weight`           | integer     | No       | Weight in grams                          | `250`                                    |
-| `length`           | integer     | No       | Length in millimeters                    | `200`                                    |
-| `width`            | integer     | No       | Width in millimeters                     | `180`                                    |
-| `height`           | integer     | No       | Height in millimeters                    | `85`                                     |
+| `color_id`         | UUID        | No       | Selected color ID                        | `"aa0e8400-e29b-41d4-a716-446655440000"` |
+| `size_id`          | UUID        | No       | Selected size ID                         | `"bb0e8400-e29b-41d4-a716-446655440000"` |
+| `color`            | object      | No       | Expanded color (if available)            | `{...}`                                  |
+| `size`             | object      | No       | Expanded size (if available)             | `{...}`                                  |
 | `is_default`       | boolean     | Yes      | Default variant flag                     | `true`                                   |
 | `created_at`       | datetime    | Yes      | ISO 8601 timestamp                       | `"2024-01-15T10:30:00Z"`                 |
 | `updated_at`       | datetime    | Yes      | ISO 8601 timestamp                       | `"2024-01-15T10:30:00Z"`                 |
@@ -522,10 +522,23 @@ Get detailed product information including variants, images, categories, and inv
         "amount": 4500,
         "currency": "USD"
       },
-      "weight": 250,
-      "length": 200,
-      "width": 180,
-      "height": 85,
+      "color_id": "aa0e8400-e29b-41d4-a716-446655440000",
+      "size_id": "bb0e8400-e29b-41d4-a716-446655440000",
+      "color": {
+        "id": "aa0e8400-e29b-41d4-a716-446655440000",
+        "name": "Black",
+        "hex_value": "#000000",
+        "product_id": "550e8400-e29b-41d4-a716-446655440000",
+        "created_at": "2024-01-15T10:20:00Z",
+        "updated_at": "2024-01-15T10:20:00Z"
+      },
+      "size": {
+        "id": "bb0e8400-e29b-41d4-a716-446655440000",
+        "name": "M",
+        "product_id": "550e8400-e29b-41d4-a716-446655440000",
+        "created_at": "2024-01-15T10:22:00Z",
+        "updated_at": "2024-01-15T10:22:00Z"
+      },
       "is_default": true,
       "created_at": "2024-01-15T10:35:00Z",
       "updated_at": "2024-01-15T10:35:00Z"
@@ -817,10 +830,8 @@ Create a new variant for a product. Each variant represents a specific SKU with 
   "compare_at_price_currency": "USD",
   "cost_amount": 4500,
   "cost_currency": "USD",
-  "weight": 250,
-  "length": 200,
-  "width": 180,
-  "height": 85,
+  "color_id": "aa0e8400-e29b-41d4-a716-446655440000",
+  "size_id": "bb0e8400-e29b-41d4-a716-446655440000",
   "is_default": true,
   "initial_stock": 100,
   "allow_backorder": false
@@ -833,7 +844,7 @@ Create a new variant for a product. Each variant represents a specific SKU with 
 - `price_amount`: Required, must be > 0 (in cents/minor units)
 - `compare_at_price_amount`: Optional, for displaying discounts
 - `cost_amount`: Optional, internal cost tracking
-- Dimensions in grams (weight) and millimeters (length/width/height)
+- `color_id` and `size_id` must belong to the same product
 - `initial_stock`: Sets initial inventory quantity
 
 **Success Response** (201 Created):
@@ -857,10 +868,23 @@ Create a new variant for a product. Each variant represents a specific SKU with 
     "amount": 4500,
     "currency": "USD"
   },
-  "weight": 250,
-  "length": 200,
-  "width": 180,
-  "height": 85,
+  "color_id": "aa0e8400-e29b-41d4-a716-446655440000",
+  "size_id": "bb0e8400-e29b-41d4-a716-446655440000",
+  "color": {
+    "id": "aa0e8400-e29b-41d4-a716-446655440000",
+    "name": "Black",
+    "hex_value": "#000000",
+    "product_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-01-15T10:20:00Z",
+    "updated_at": "2024-01-15T10:20:00Z"
+  },
+  "size": {
+    "id": "bb0e8400-e29b-41d4-a716-446655440000",
+    "name": "M",
+    "product_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-01-15T10:22:00Z",
+    "updated_at": "2024-01-15T10:22:00Z"
+  },
   "is_default": true,
   "created_at": "2024-01-15T11:00:00Z",
   "updated_at": "2024-01-15T11:00:00Z"
@@ -902,7 +926,7 @@ curl -X POST "http://localhost:8000/api/admin/products/550e8400-e29b-41d4-a716-4
 
 #### Update Variant
 
-Update variant details including pricing, status, and dimensions.
+Update variant details including pricing, status, and option selection.
 
 - **Method**: `PATCH`
 - **Path**: `/api/admin/products/variants/{variant_id}`
@@ -929,10 +953,8 @@ Update variant details including pricing, status, and dimensions.
   "compare_at_price_currency": "USD",
   "cost_amount": 4000,
   "cost_currency": "USD",
-  "weight": 240,
-  "length": 200,
-  "width": 180,
-  "height": 85
+  "color_id": "aa0e8400-e29b-41d4-a716-446655440000",
+  "size_id": "bb0e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -962,10 +984,23 @@ Update variant details including pricing, status, and dimensions.
     "amount": 4000,
     "currency": "USD"
   },
-  "weight": 240,
-  "length": 200,
-  "width": 180,
-  "height": 85,
+  "color_id": "aa0e8400-e29b-41d4-a716-446655440000",
+  "size_id": "bb0e8400-e29b-41d4-a716-446655440000",
+  "color": {
+    "id": "aa0e8400-e29b-41d4-a716-446655440000",
+    "name": "Black",
+    "hex_value": "#000000",
+    "product_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-01-15T10:20:00Z",
+    "updated_at": "2024-01-15T10:20:00Z"
+  },
+  "size": {
+    "id": "bb0e8400-e29b-41d4-a716-446655440000",
+    "name": "M",
+    "product_id": "550e8400-e29b-41d4-a716-446655440000",
+    "created_at": "2024-01-15T10:22:00Z",
+    "updated_at": "2024-01-15T10:22:00Z"
+  },
   "is_default": true,
   "created_at": "2024-01-15T11:00:00Z",
   "updated_at": "2024-01-16T12:00:00Z"
@@ -1030,10 +1065,10 @@ Set variant status to INACTIVE, hiding it from storefront without deleting it.
   },
   "compare_at_price": null,
   "cost": null,
-  "weight": null,
-  "length": null,
-  "width": null,
-  "height": null,
+  "color_id": null,
+  "size_id": null,
+  "color": null,
+  "size": null,
   "is_default": true,
   "created_at": "2024-01-15T11:00:00Z",
   "updated_at": "2024-01-16T13:00:00Z"

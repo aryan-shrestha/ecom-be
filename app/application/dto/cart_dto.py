@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from app.application.dto.product_dto import ColorDTO, MoneyDTO
+from app.application.dto.product_dto import MoneyDTO
 
 @dataclass
 class CartItemDTO:

@@ -4,6 +4,8 @@ from typing import Optional
 from uuid import UUID
 
 from app.application.dto.product_dto import VariantDTO, MoneyDTO
+from app.application.dto.color_dto import ColorDTO
+from app.application.dto.size_dto import SizeDTO
 from app.application.errors.app_errors import ResourceNotFoundError
 from app.application.interfaces.uow import UnitOfWork
 from app.application.ports.audit_log_port import AuditLogPort
@@ -61,6 +63,13 @@ class DeactivateVariantUseCase:
                 },
             )
 
+            color = None
+            if deactivated_variant.color_id:
+                color = await self.uow.colors.get_by_id(deactivated_variant.color_id)
+            size = None
+            if deactivated_variant.size_id:
+                size = await self.uow.sizes.get_by_id(deactivated_variant.size_id)
+
             return VariantDTO(
                 id=deactivated_variant.id,
                 product_id=deactivated_variant.product_id,
@@ -78,8 +87,31 @@ class DeactivateVariantUseCase:
                     if deactivated_variant.cost
                     else None
                 ),
-                size=None,
-                color=None,
+                color_id=deactivated_variant.color_id,
+                size_id=deactivated_variant.size_id,
+                color=(
+                    ColorDTO(
+                        id=color.id,
+                        product_id=color.product_id,
+                        name=color.name,
+                        hex_value=color.hex_value,
+                        created_at=color.created_at,
+                        updated_at=color.updated_at,
+                    )
+                    if color
+                    else None
+                ),
+                size=(
+                    SizeDTO(
+                        id=size.id,
+                        product_id=size.product_id,
+                        name=size.name,
+                        created_at=size.created_at,
+                        updated_at=size.updated_at,
+                    )
+                    if size
+                    else None
+                ),
                 is_default=deactivated_variant.is_default,
                 created_at=deactivated_variant.created_at,
                 updated_at=deactivated_variant.updated_at,

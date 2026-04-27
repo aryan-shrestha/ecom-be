@@ -25,103 +25,128 @@ async def seed_data():
     async with sessionmaker() as session:
         # Check if data already exists
         result = await session.execute(select(RoleModel))
-        if result.scalars().first():
-            print("Data already exists, skipping seed")
-            return
-
-        print("Seeding database...")
-
         # Create roles
-        admin_role = RoleModel(id=uuid.uuid4(), name="admin")
-        user_role = RoleModel(id=uuid.uuid4(), name="user")
-        session.add_all([admin_role, user_role])
+            # Roles (idempotent)
+            admin_role = (
+                await session.execute(select(RoleModel).where(RoleModel.name == "admin"))
+            ).scalar_one_or_none()
+            if not admin_role:
+                admin_role = RoleModel(id=uuid.uuid4(), name="admin")
+                session.add(admin_role)
 
-        # Create permissions
-        rbac_assign_perm = PermissionModel(id=uuid.uuid4(), code="rbac:assign")
-        rbac_view_perm = PermissionModel(id=uuid.uuid4(), code="rbac:view")
-        users_read_perm = PermissionModel(id=uuid.uuid4(), code="users:read")
-        users_write_perm = PermissionModel(id=uuid.uuid4(), code="users:write")
-        
-        # Product management permissions
-        products_read_perm = PermissionModel(id=uuid.uuid4(), code="products:read")
-        products_write_perm = PermissionModel(id=uuid.uuid4(), code="products:write")
-        products_publish_perm = PermissionModel(id=uuid.uuid4(), code="products:publish")
-        products_archive_perm = PermissionModel(id=uuid.uuid4(), code="products:archive")
-        products_variant_write_perm = PermissionModel(id=uuid.uuid4(), code="products:variant_write")
-        categories_read_perm = PermissionModel(id=uuid.uuid4(), code="categories:read")
-        categories_write_perm = PermissionModel(id=uuid.uuid4(), code="categories:write")
-        inventory_read_perm = PermissionModel(id=uuid.uuid4(), code="inventory:read")
-        inventory_adjust_perm = PermissionModel(id=uuid.uuid4(), code="inventory:adjust")
-        products_media_write_perm = PermissionModel(id=uuid.uuid4(), code="products:media_write")
+            user_role = (
+                await session.execute(select(RoleModel).where(RoleModel.name == "user"))
+            ).scalar_one_or_none()
+            if not user_role:
+                user_role = RoleModel(id=uuid.uuid4(), name="user")
+                session.add(user_role)
 
-        session.add_all([
-            rbac_assign_perm, rbac_view_perm, users_read_perm, users_write_perm,
-            products_read_perm, products_write_perm, products_publish_perm, products_archive_perm,
-            products_variant_write_perm, categories_read_perm, categories_write_perm,
-            inventory_read_perm, inventory_adjust_perm, products_media_write_perm,
-        ])
-        await session.flush()
+            # Permissions (idempotent)
+            permission_codes = [
+                "rbac:assign",
+                "rbac:view",
+                "users:read",
+                "users:write",
+                "products:read",
+                "products:write",
+                "products:publish",
+                "products:archive",
+                "products:variant_write",
+                "categories:read",
+                "categories:write",
+                "inventory:read",
+                "inventory:adjust",
+                "products:media_write",
+                "orders:manage",
+                "roles:read",
+                "roles:write",
+                "permissions:read",
+                "permissions:write",
+            ]
 
-        # Assign permissions to admin role
-        admin_perms = [
-            RolePermissionModel(role_id=admin_role.id, permission_id=rbac_assign_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=rbac_view_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=users_read_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=users_write_perm.id),
-            # Product management permissions
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_read_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_write_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_publish_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_archive_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_variant_write_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=categories_read_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=categories_write_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=inventory_read_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=inventory_adjust_perm.id),
-            RolePermissionModel(role_id=admin_role.id, permission_id=products_media_write_perm.id),
-        ]
-        session.add_all(admin_perms)
+            result = await session.execute(
+                select(PermissionModel).where(PermissionModel.code.in_(permission_codes))
+            )
+            permissions_by_code = {perm.code: perm for perm in result.scalars().all()}
+            for code in permission_codes:
+                if code not in permissions_by_code:
+                    perm = PermissionModel(id=uuid.uuid4(), code=code)
+                    session.add(perm)
+                    permissions_by_code[code] = perm
 
-        # Assign permissions to user role
-        user_perms = [
-            RolePermissionModel(role_id=user_role.id, permission_id=users_read_perm.id),
-        ]
-        session.add_all(user_perms)
+            await session.flush()
 
-        # Create admin user
-        hasher = Argon2PasswordHasher()
-        admin_user_id = uuid.uuid4()
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+            # Assign permissions to admin role
+            result = await session.execute(
+                select(RolePermissionModel.permission_id).where(
+                    RolePermissionModel.role_id == admin_role.id
+                )
+            )
+            admin_permission_ids = set(result.scalars().all())
+            for code in permission_codes:
+                perm_id = permissions_by_code[code].id
+                if perm_id not in admin_permission_ids:
+                    session.add(RolePermissionModel(role_id=admin_role.id, permission_id=perm_id))
 
-        admin_user = UserModel(
-            id=admin_user_id,
-            email="admin@example.com",
-            password_hash=hasher.hash_password("Admin123!"),
-            is_active=True,
-            is_verified=True,
-            token_version=0,
-            created_at=now,
-            updated_at=now,
-        )
-        session.add(admin_user)
-        await session.flush()
-        print("RBAC: rbac:assign, rbac:view")
-        print("Users: users:read, users:write")
+            # Assign permissions to user role (users:read only)
+            users_read_id = permissions_by_code["users:read"].id
+            result = await session.execute(
+                select(RolePermissionModel.permission_id).where(
+                    RolePermissionModel.role_id == user_role.id
+                )
+            )
+            user_permission_ids = set(result.scalars().all())
+            if users_read_id not in user_permission_ids:
+                session.add(RolePermissionModel(role_id=user_role.id, permission_id=users_read_id))
+
+            # Create admin user if missing
+            hasher = Argon2PasswordHasher()
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+            admin_user = (
+                await session.execute(select(UserModel).where(UserModel.email == "admin@example.com"))
+            ).scalar_one_or_none()
+            if not admin_user:
+                admin_user = UserModel(
+                    id=uuid.uuid4(),
+                    email="admin@example.com",
+                    password_hash=hasher.hash_password("Admin123!"),
+                    is_active=True,
+                    is_verified=True,
+                    token_version=0,
+                    created_at=now,
+                    updated_at=now,
+                )
+                session.add(admin_user)
+                await session.flush()
         print("Products: products:read, products:write, products:publish, products:archive")
         print("Products:variant_write, products:media_write")
         print("Categories: categories:read, categories:write")
         print("Inventory: inventory:read, inventory:adjust")
+        print("Orders: orders:manage")
+        print("Roles: roles:read, roles:write")
+        print("Permissions: permissions:read, permissions:write")
 
         # Assign admin role to admin user
-        admin_user_role = UserRoleModel(user_id=admin_user_id, role_id=admin_role.id)
-        session.add(admin_user_role)
+        result = await session.execute(
+            select(UserRoleModel).where(
+                UserRoleModel.user_id == admin_user.id,
+                UserRoleModel.role_id == admin_role.id,
+            )
+        )
+        if not result.scalar_one_or_none():
+            session.add(UserRoleModel(user_id=admin_user.id, role_id=admin_role.id))
 
         await session.commit()
 
         print("\nDatabase seeded successfully!")
         print("\nCreated:")
         print("  - Roles: admin, user")
-        print("  - Permissions: rbac:assign, rbac:view, users:read, users:write")
+        print("  - Permissions: rbac:assign, rbac:view, users:read, users:write,")
+        print("    products:read, products:write, products:publish, products:archive,")
+        print("    products:variant_write, products:media_write,")
+        print("    categories:read, categories:write,")
+        print("    inventory:read, inventory:adjust,")
+        print("    orders:manage, roles:read, roles:write, permissions:read, permissions:write")
         print("  - Admin user:")
         print("      Email: admin@example.com")
         print("      Password: Admin123!")

@@ -17,15 +17,26 @@ class MoneySchema(BaseModel):
     currency: str = Field(..., min_length=3, max_length=3, description="ISO 4217 currency code")
 
 
-class ColorSchema(BaseModel):
-    """Variant color."""
+class ColorResponseSchema(BaseModel):
+    """Color response."""
 
-    name: str = Field(..., min_length=1, max_length=50)
-    hex_code: Optional[str] = Field(
-        None,
-        pattern=r"^#([A-Fa-f0-9]{6})$",
-        description="Hex code in format #RRGGBB",
-    )
+    id: UUID
+    name: str
+    hex_value: str
+    created_at: datetime
+    updated_at: datetime
+    product_id: UUID
+
+
+class SizeResponseSchema(BaseModel):
+    """Size response."""
+
+    id: UUID
+    name: str
+    created_at: datetime
+    updated_at: datetime
+    product_id: UUID
+
 
 # Product schemas
 class CreateProductRequestSchema(BaseModel):
@@ -83,8 +94,8 @@ class CreateVariantRequestSchema(BaseModel):
     compare_at_price_currency: Optional[str] = Field(None, min_length=3, max_length=3)
     cost_amount: Optional[int] = Field(None, gt=0)
     cost_currency: Optional[str] = Field(None, min_length=3, max_length=3)
-    color: Optional[ColorSchema] = Field(None)
-    size: Optional[str] = Field(None, max_length=3)
+    color_id: Optional[UUID] = Field(None)
+    size_id: Optional[UUID] = Field(None)
     is_default: bool = False
     initial_stock: int = Field(default=0, ge=0)
     allow_backorder: bool = False
@@ -101,8 +112,8 @@ class UpdateVariantRequestSchema(BaseModel):
     compare_at_price_currency: Optional[str] = Field(None, min_length=3, max_length=3)
     cost_amount: Optional[int] = Field(None, gt=0)
     cost_currency: Optional[str] = Field(None, min_length=3, max_length=3)
-    color: Optional[ColorSchema] = Field(None)
-    size: Optional[str] = Field(None, max_length=3)
+    color_id: Optional[UUID] = Field(None)
+    size_id: Optional[UUID] = Field(None)
 
 class VariantResponseSchema(BaseModel):
     """Variant response."""
@@ -115,8 +126,10 @@ class VariantResponseSchema(BaseModel):
     price: MoneySchema
     compare_at_price: Optional[MoneySchema]
     cost: Optional[MoneySchema]
-    color: Optional[ColorSchema]
-    size: Optional[str]
+    color_id: Optional[UUID]
+    size_id: Optional[UUID]
+    color: Optional[ColorResponseSchema]
+    size: Optional[SizeResponseSchema]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -315,32 +328,14 @@ class ColorCreateRequestSchema(BaseModel):
     """Request to create color."""
 
     name: str = Field(..., min_length=1, max_length=50)
-    hex_value: Optional[str] = Field(
-        None,
-        pattern=r"^#([A-Fa-f0-9]{6})$",
-        description="Hex code in format #RRGGBB",
+    hex_value: str = Field(
+        ..., pattern=r"^#([A-Fa-f0-9]{6})$", description="Hex code in format #RRGGBB"
     )
 
-class ColorResponseSchema(BaseModel):
-    """Color response."""
-
-    name: str
-    hex_value: Optional[str]
-    created_at: datetime
-    updated_at: datetime
-    product_id: UUID
 
 
 class SizeCreateRequestSchema(BaseModel):
     """Request to create size."""
 
     name: str = Field(..., min_length=1, max_length=50)
-    product_id: UUID
 
-class SizeResponseSchema(BaseModel):
-    """Size response."""
-
-    name: str
-    created_at: datetime
-    updated_at: datetime
-    product_id: UUID

@@ -10,11 +10,13 @@ from app.application.dto.product_dto import (
     InventoryDTO,
     MoneyDTO,
 )
+from app.application.dto.size_dto import SizeDTO
 from app.application.errors.app_errors import ResourceNotFoundError
 from app.application.interfaces.uow import UnitOfWork
 from app.application.ports.cache_port import CachePort
 from app.domain.entities.product import ProductStatus
 from app.domain.entities.product_variant import VariantStatus
+from uuid import UUID
 import json
 
 
@@ -74,6 +76,31 @@ class GetProductStorefrontUseCase:
                         allow_backorder=inv.allow_backorder,
                     )
 
+            color_map: dict[UUID, ColorDTO] = {}
+            size_map: dict[UUID, SizeDTO] = {}
+            for variant in variants:
+                if variant.color_id and variant.color_id not in color_map:
+                    color = await self.uow.colors.get_by_id(variant.color_id)
+                    if color:
+                        color_map[color.id] = ColorDTO(
+                            id=color.id,
+                            product_id=color.product_id,
+                            name=color.name,
+                            hex_value=color.hex_value,
+                            created_at=color.created_at,
+                            updated_at=color.updated_at,
+                        )
+                if variant.size_id and variant.size_id not in size_map:
+                    size = await self.uow.sizes.get_by_id(variant.size_id)
+                    if size:
+                        size_map[size.id] = SizeDTO(
+                            id=size.id,
+                            product_id=size.product_id,
+                            name=size.name,
+                            created_at=size.created_at,
+                            updated_at=size.updated_at,
+                        )
+
             # Build response
             response = ProductDetailResponse(
                 product=ProductDTO(
@@ -104,15 +131,10 @@ class GetProductStorefrontUseCase:
                             else None
                         ),
                         cost=None,  # Hide cost from storefront
-                        color=(
-                            ColorDTO(
-                                name=v.color.name,
-                                hex_code=v.color.hex_code,
-                            )
-                            if v.color
-                            else None
-                        ),
-                        size=v.size,
+                        color_id=v.color_id,
+                        size_id=v.size_id,
+                        color=color_map.get(v.color_id) if v.color_id else None,
+                        size=size_map.get(v.size_id) if v.size_id else None,
                         is_default=v.is_default,
                         created_at=v.created_at,
                         updated_at=v.updated_at,

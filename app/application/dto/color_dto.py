@@ -8,8 +8,10 @@ from uuid import UUID
 class ColorDTO:
     """Variant color."""
 
+    id: UUID
+    product_id: UUID
     name: str
-    hex_value: Optional[str]
+    hex_value: str
     created_at: datetime
     updated_at: datetime
 
@@ -19,5 +21,5 @@ class ColorCreateRequest:
     """Request to create a new color."""
 
     name: str
-    hex_value: Optional[str]
+    hex_value: str
     product_id: UUID

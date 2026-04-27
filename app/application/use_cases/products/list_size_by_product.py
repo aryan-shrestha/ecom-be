@@ -28,10 +28,11 @@ class ListSizeByProductUseCase:
 
             return [
                 SizeDTO(
+                    id=size.id,
+                    product_id=size.product_id,
                     name=size.name,
                     created_at=size.created_at,
                     updated_at=size.updated_at,
-                    product_id=size.product_id,
                 )
                 for size in sizes
             ]

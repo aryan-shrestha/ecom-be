@@ -30,6 +30,38 @@ async def test_register_success(client: AsyncClient):
 
 
 @pytest.mark.asyncio
+async def test_register_includes_names_and_me_returns_them(client: AsyncClient):
+    """Register with names and verify /auth/me returns them."""
+    response = await client.post(
+        "/auth/register",
+        json={
+            "email": "nameduser@example.com",
+            "password": "SecurePass123",
+            "first_name": "Ada",
+            "last_name": "Lovelace",
+        },
+    )
+
+    assert response.status_code == 201
+
+    login_response = await client.post(
+        "/auth/login",
+        json={"email": "nameduser@example.com", "password": "SecurePass123"},
+    )
+    access_token = login_response.json()["access_token"]
+
+    me_response = await client.get(
+        "/auth/me",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+
+    assert me_response.status_code == 200
+    data = me_response.json()
+    assert data["first_name"] == "ada"
+    assert data["last_name"] == "lovelace"
+
+
+@pytest.mark.asyncio
 async def test_register_duplicate_email(client: AsyncClient):
     """Test registration with duplicate email fails."""
     # Register first user

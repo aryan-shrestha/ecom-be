@@ -5,6 +5,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from app.application.dto.color_dto import ColorDTO
+from app.application.dto.size_dto import SizeDTO
+
 
 @dataclass
 class MoneyDTO:
@@ -13,17 +16,6 @@ class MoneyDTO:
     amount: int  # Minor units (cents)
     currency: str
 
-
-@dataclass
-class ColorDTO:
-    """Variant color."""
-
-    name: str
-    hex_code: Optional[str] = None
-
-@dataclass
-class SizeDTO:
-    name: str
 
 @dataclass
 class ProductDTO:
@@ -57,6 +49,8 @@ class VariantDTO:
     price: MoneyDTO
     compare_at_price: Optional[MoneyDTO]
     cost: Optional[MoneyDTO]
+    color_id: Optional[UUID]
+    size_id: Optional[UUID]
     color: Optional[ColorDTO]
     size: Optional[SizeDTO]
     is_default: bool
@@ -181,8 +175,8 @@ class CreateVariantRequest:
     compare_at_price_currency: Optional[str] = None
     cost_amount: Optional[int] = None
     cost_currency: Optional[str] = None
-    color: Optional[ColorDTO] = None
-    size: Optional[SizeDTO] = None
+    color_id: Optional[UUID] = None
+    size_id: Optional[UUID] = None
     is_default: bool = False
     initial_stock: int = 0
     allow_backorder: bool = False
@@ -201,8 +195,8 @@ class UpdateVariantRequest:
     compare_at_price_currency: Optional[str]
     cost_amount: Optional[int]
     cost_currency: Optional[str]
-    color: Optional[ColorDTO]
-    size: Optional[SizeDTO]
+    color_id: Optional[UUID]
+    size_id: Optional[UUID]
 
 @dataclass
 class AdjustStockRequest:

@@ -51,9 +51,10 @@ class AddColorUseCase:
             color = await self.uow.colors.save(color)
 
             return ColorDTO(
+                id=color.id,
+                product_id=color.product_id,
                 name=color.name,
                 hex_value=color.hex_value,
                 created_at=color.created_at,
                 updated_at=color.updated_at,
-                product_id=color.product_id,
             )

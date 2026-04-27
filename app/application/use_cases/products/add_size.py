@@ -49,8 +49,9 @@ class AddSizeUseCase:
             size = await self.uow.sizes.save(size)
 
             return SizeDTO(
+                id=size.id,
+                product_id=size.product_id,
                 name=size.name,
                 created_at=size.created_at,
                 updated_at=size.updated_at,
-                product_id=size.product_id,
             )

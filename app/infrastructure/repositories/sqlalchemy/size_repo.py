@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import delete, func
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities.size import Size
@@ -23,13 +23,13 @@ class SQLAlchemySizeRepository(SizeRepository):
 
     async def list_all(self) -> list[Size]:
         """List all sizes."""
-        result = await self.session.execute(func.select(SizeModel))
+        result = await self.session.execute(select(SizeModel))
         return [SizeMapper.to_entity(row) for row in result.scalars().all()]
 
     async def list_by_product_id(self, product_id: UUID) -> list[Size]:
         """List all sizes for a given product ID."""
         result = await self.session.execute(
-            func.select(SizeModel).where(SizeModel.product_id == product_id)
+            select(SizeModel).where(SizeModel.product_id == product_id)
         )
         return [SizeMapper.to_entity(row) for row in result.scalars().all()]
 
@@ -37,7 +37,7 @@ class SQLAlchemySizeRepository(SizeRepository):
         """Save new size."""
         model = SizeMapper.to_model(size)
         self.session.add(model)
-        await self.session.commit()
+        await self.session.flush()
         return SizeMapper.to_entity(model)
 
     async def update(self, size: Size) -> Size:
@@ -46,10 +46,10 @@ class SQLAlchemySizeRepository(SizeRepository):
         if not model:
             raise ValueError("Size not found")
         SizeMapper.update_model(model, size)
-        await self.session.commit()
+        await self.session.flush()
         return SizeMapper.to_entity(model)
 
     async def delete(self, size_id: UUID) -> None:
         """Delete size (soft delete recommended)."""
         await self.session.execute(delete(SizeModel).where(SizeModel.id == size_id))
-        await self.session.commit()
+        await self.session.flush()

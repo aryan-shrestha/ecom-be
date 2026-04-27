@@ -33,7 +33,6 @@ from app.presentation.api.deps.auth_deps import get_current_principal, require_p
 from app.presentation.api.deps.container import Container, get_container
 from app.presentation.api.schemas.http_product_schemas import (
     ColorResponseSchema,
-    ColorSchema,
     CreateProductRequestSchema,
     UpdateProductRequestSchema,
     ProductResponseSchema,
@@ -53,7 +52,6 @@ from app.presentation.api.schemas.http_product_schemas import (
     InventoryResponseSchema,
     CategoryResponseSchema,
     ColorCreateRequestSchema,
-    ColorResponseSchema,
     SizeCreateRequestSchema,
     SizeResponseSchema,
 )
@@ -233,8 +231,31 @@ async def get_product(
                     cost=(
                         MoneySchema(amount=v.cost.amount, currency=v.cost.currency) if v.cost else None
                     ),
-                    color=None,
-                    size=None,
+                    color_id=v.color_id,
+                    size_id=v.size_id,
+                    color=(
+                        ColorResponseSchema(
+                            id=v.color.id,
+                            name=v.color.name,
+                            hex_value=v.color.hex_value,
+                            created_at=v.color.created_at,
+                            updated_at=v.color.updated_at,
+                            product_id=v.color.product_id,
+                        )
+                        if v.color
+                        else None
+                    ),
+                    size=(
+                        SizeResponseSchema(
+                            id=v.size.id,
+                            name=v.size.name,
+                            created_at=v.size.created_at,
+                            updated_at=v.size.updated_at,
+                            product_id=v.size.product_id,
+                        )
+                        if v.size
+                        else None
+                    ),
                     is_default=v.is_default,
                     created_at=v.created_at,
                     updated_at=v.updated_at,
@@ -417,8 +438,8 @@ async def add_variant(
             compare_at_price_currency=request_data.compare_at_price_currency,
             cost_amount=request_data.cost_amount,
             cost_currency=request_data.cost_currency,
-            color=request_data.color,
-            size=request_data.size,
+            color_id=request_data.color_id,
+            size_id=request_data.size_id,
             is_default=request_data.is_default,
             initial_stock=request_data.initial_stock,
             allow_backorder=request_data.allow_backorder,
@@ -438,8 +459,31 @@ async def add_variant(
                 else None
             ),
             cost=MoneySchema(amount=result.cost.amount, currency=result.cost.currency) if result.cost else None,
-            color=ColorSchema(name=result.color.name, hex_code=result.color.hex_code) if result.color else None,
-            size=result.size,
+            color_id=result.color_id,
+            size_id=result.size_id,
+            color=(
+                ColorResponseSchema(
+                    id=result.color.id,
+                    name=result.color.name,
+                    hex_value=result.color.hex_value,
+                    created_at=result.color.created_at,
+                    updated_at=result.color.updated_at,
+                    product_id=result.color.product_id,
+                )
+                if result.color
+                else None
+            ),
+            size=(
+                SizeResponseSchema(
+                    id=result.size.id,
+                    name=result.size.name,
+                    created_at=result.size.created_at,
+                    updated_at=result.size.updated_at,
+                    product_id=result.size.product_id,
+                )
+                if result.size
+                else None
+            ),
             is_default=result.is_default,
             created_at=result.created_at,
             updated_at=result.updated_at,
@@ -476,8 +520,8 @@ async def update_variant(
             compare_at_price_currency=request_data.compare_at_price_currency,
             cost_amount=request_data.cost_amount,
             cost_currency=request_data.cost_currency,
-            size=request_data.size,
-            color=request_data.color,
+            color_id=request_data.color_id,
+            size_id=request_data.size_id,
         )
         result = await use_case.execute(request)
 
@@ -494,8 +538,31 @@ async def update_variant(
                 else None
             ),
             cost=MoneySchema(amount=result.cost.amount, currency=result.cost.currency) if result.cost else None,
-            color=ColorSchema(name=result.color.name, hex_code=result.color.hex_code) if result.color else None,
-            size=result.size,
+            color_id=result.color_id,
+            size_id=result.size_id,
+            color=(
+                ColorResponseSchema(
+                    id=result.color.id,
+                    name=result.color.name,
+                    hex_value=result.color.hex_value,
+                    created_at=result.color.created_at,
+                    updated_at=result.color.updated_at,
+                    product_id=result.color.product_id,
+                )
+                if result.color
+                else None
+            ),
+            size=(
+                SizeResponseSchema(
+                    id=result.size.id,
+                    name=result.size.name,
+                    created_at=result.size.created_at,
+                    updated_at=result.size.updated_at,
+                    product_id=result.size.product_id,
+                )
+                if result.size
+                else None
+            ),
             is_default=result.is_default,
             created_at=result.created_at,
             updated_at=result.updated_at,
@@ -536,8 +603,31 @@ async def deactivate_variant(
                 else None
             ),
             cost=MoneySchema(amount=result.cost.amount, currency=result.cost.currency) if result.cost else None,
-            color=result.color,
-            size=result.size,
+            color_id=result.color_id,
+            size_id=result.size_id,
+            color=(
+                ColorResponseSchema(
+                    id=result.color.id,
+                    name=result.color.name,
+                    hex_value=result.color.hex_value,
+                    created_at=result.color.created_at,
+                    updated_at=result.color.updated_at,
+                    product_id=result.color.product_id,
+                )
+                if result.color
+                else None
+            ),
+            size=(
+                SizeResponseSchema(
+                    id=result.size.id,
+                    name=result.size.name,
+                    created_at=result.size.created_at,
+                    updated_at=result.size.updated_at,
+                    product_id=result.size.product_id,
+                )
+                if result.size
+                else None
+            ),
             is_default=result.is_default,
             created_at=result.created_at,
             updated_at=result.updated_at,
@@ -854,11 +944,12 @@ async def list_colors_by_product(
         colors = await use_case.execute(product_id)
         return [
             ColorResponseSchema(
+                id=color.id,
                 name=color.name,
                 hex_value=color.hex_value,
                 created_at=color.created_at,
                 updated_at=color.updated_at,
-                product_id=product_id
+                product_id=color.product_id,
             )
             for color in colors
         ]
@@ -887,11 +978,12 @@ async def add_color_to_product(
     try:
         color = await use_case.execute(color_create_request)
         return ColorResponseSchema(
+            id=color.id,
             name=color.name,
             hex_value=color.hex_value,
             created_at=color.created_at,
             updated_at=color.updated_at,
-            product_id=color_create_request.product_id
+            product_id=color.product_id,
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -937,10 +1029,11 @@ async def list_sizes_by_product(
         sizes = await use_case.execute(product_id)
         return [
             SizeResponseSchema(
+                id=size.id,
                 name=size.name,
                 created_at=size.created_at,
                 updated_at=size.updated_at,
-                product_id=product_id
+                product_id=size.product_id,
             )
             for size in sizes
         ]
@@ -968,10 +1061,11 @@ async def add_size_to_product(
     try:
         size = await use_case.execute(size_create_request)
         return SizeResponseSchema(
+            id=size.id,
             name=size.name,
             created_at=size.created_at,
             updated_at=size.updated_at,
-            product_id=size_create_request.product_id
+            product_id=size.product_id,
         )
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

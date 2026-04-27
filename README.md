@@ -2,6 +2,8 @@
 
 Production-ready E-commerce API built with **FastAPI** and **strict Clean Architecture** principles.
 
+Includes products, variants, images, colors, sizes, inventory, categories, carts, checkout, customer orders, admin orders, admin users, and RBAC.
+
 ## Architecture
 
 This project follows **Clean Architecture** with strict layer boundaries:
@@ -93,8 +95,8 @@ python scripts/seed_data.py
 
 This creates:
 
-- Admin role with `rbac:assign` permission
-- User role (no permissions)
+- Admin role with full RBAC, users, products, inventory, and orders permissions
+- User role with `users:read`
 - Admin user: `admin@example.com` / `Admin123!`
 
 ## Running the Server
@@ -237,6 +239,37 @@ ruff check . && ruff format . && mypy app/
 alembic revision --autogenerate -m "description"
 alembic upgrade head
 ```
+
+## Permissions Matrix (Admin)
+
+Admin endpoints require the following permissions:
+
+- `orders:manage` for admin order management
+- `roles:read` / `roles:write` for role management
+- `permissions:read` / `permissions:write` for permission management
+- `users:read` / `users:write` for admin users
+- `products:read` / `products:write` / `products:publish` / `products:archive`
+- `products:variant_write` / `products:media_write`
+- `categories:read` / `categories:write`
+- `inventory:read` / `inventory:adjust`
+
+Seed data assigns all of the above to the admin role.
+
+## Guest Cart and Checkout
+
+- Guests receive a `cart_token` cookie on first cart access.
+- Authenticated users have a user-linked cart.
+- `POST /cart/merge` merges a guest cart into the authenticated cart.
+- Checkout requires `Idempotency-Key` and a non-empty cart.
+
+## Admin Product Lifecycle
+
+1. Create product
+2. Add colors and sizes for the product
+3. Create variants with `color_id` and `size_id`
+4. Adjust inventory
+5. Upload product/variant images
+6. Publish product
 
 ### Project Structure
 

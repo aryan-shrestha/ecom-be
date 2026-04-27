@@ -3,6 +3,8 @@
 import uuid
 
 from app.application.dto.product_dto import CreateVariantRequest, VariantDTO, MoneyDTO
+from app.application.dto.color_dto import ColorDTO
+from app.application.dto.size_dto import SizeDTO
 from app.application.errors.app_errors import ConflictError, ResourceNotFoundError
 from app.application.interfaces.uow import UnitOfWork
 from app.application.ports.audit_log_port import AuditLogPort
@@ -46,6 +48,18 @@ class AddVariantUseCase:
             if existing_variant:
                 raise ConflictError(f"Variant with SKU '{sku}' already exists")
 
+            color = None
+            if request.color_id:
+                color = await self.uow.colors.get_by_id(request.color_id)
+                if not color or color.product_id != request.product_id:
+                    raise ResourceNotFoundError("Color not found for product")
+
+            size = None
+            if request.size_id:
+                size = await self.uow.sizes.get_by_id(request.size_id)
+                if not size or size.product_id != request.product_id:
+                    raise ResourceNotFoundError("Size not found for product")
+
             # Create variant
             now = self.clock.now()
             variant_id = uuid.uuid4()
@@ -71,8 +85,8 @@ class AddVariantUseCase:
                 price=price,
                 compare_at_price=compare_at_price,
                 cost=cost,
-                color=request.color,
-                size=request.size,
+                color_id=request.color_id,
+                size_id=request.size_id,
                 is_default=request.is_default,
                 created_at=now,
                 updated_at=now,
@@ -120,8 +134,31 @@ class AddVariantUseCase:
                     if variant.cost
                     else None
                 ),
-                color=variant.color,
-                size=variant.size,
+                color_id=variant.color_id,
+                size_id=variant.size_id,
+                color=(
+                    ColorDTO(
+                        id=color.id,
+                        product_id=color.product_id,
+                        name=color.name,
+                        hex_value=color.hex_value,
+                        created_at=color.created_at,
+                        updated_at=color.updated_at,
+                    )
+                    if color
+                    else None
+                ),
+                size=(
+                    SizeDTO(
+                        id=size.id,
+                        product_id=size.product_id,
+                        name=size.name,
+                        created_at=size.created_at,
+                        updated_at=size.updated_at,
+                    )
+                    if size
+                    else None
+                ),
                 is_default=variant.is_default,
                 created_at=variant.created_at,
                 updated_at=variant.updated_at,

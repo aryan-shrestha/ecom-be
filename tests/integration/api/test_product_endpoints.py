@@ -182,7 +182,21 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
     )
     product_id = create_response.json()["id"]
 
-    # Add variant with dimensions
+    color_response = await client.post(
+        f"/admin/products/{product_id}/colors/",
+        json={"name": "Black", "hex_value": "#000000"},
+        headers=auth_headers,
+    )
+    color_id = color_response.json()["id"]
+
+    size_response = await client.post(
+        f"/admin/products/{product_id}/sizes/",
+        json={"name": "M"},
+        headers=auth_headers,
+    )
+    size_id = size_response.json()["id"]
+
+    # Add variant with color and size IDs
     response = await client.post(
         f"/admin/products/{product_id}/variants",
         json={
@@ -192,10 +206,8 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
             "price_currency": "USD",
             "compare_at_price_amount": 2499,
             "compare_at_price_currency": "USD",
-            "weight": 500,
-            "length": 100,
-            "width": 50,
-            "height": 25,
+            "color_id": color_id,
+            "size_id": size_id,
             "is_default": True,
         },
         headers=auth_headers,
@@ -207,11 +219,164 @@ async def test_add_variant_success(client: AsyncClient, auth_headers: dict):
     assert data["status"] == "ACTIVE"
     assert data["price"]["amount"] == 1999
     assert data["price"]["currency"] == "USD"
-    assert data["weight"] == 500
-    assert data["length"] == 100
-    assert data["width"] == 50
-    assert data["height"] == 25
+    assert data["color_id"] == color_id
+    assert data["size_id"] == size_id
+    assert data["color"]["hex_value"] == "#000000"
+    assert data["size"]["name"] == "M"
     assert data["is_default"] is True
+
+
+@pytest.mark.asyncio
+async def test_add_variant_invalid_color_id(client: AsyncClient, auth_headers: dict):
+    """Test that invalid color_id is rejected."""
+    create_response = await client.post(
+        "/admin/products",
+        json={"name": "Invalid Color Product", "slug": "invalid-color-product"},
+        headers=auth_headers,
+    )
+    product_id = create_response.json()["id"]
+
+    response = await client.post(
+        f"/admin/products/{product_id}/variants",
+        json={
+            "sku": "BAD-COLOR-001",
+            "price_amount": 1000,
+            "price_currency": "USD",
+            "color_id": str(uuid.uuid4()),
+        },
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_update_variant_with_color_and_size(client: AsyncClient, auth_headers: dict):
+    """Test updating a variant with color_id and size_id."""
+    create_response = await client.post(
+        "/admin/products",
+        json={"name": "Update Variant Product", "slug": "update-variant-product"},
+        headers=auth_headers,
+    )
+    product_id = create_response.json()["id"]
+
+    color_response = await client.post(
+        f"/admin/products/{product_id}/colors/",
+        json={"name": "Blue", "hex_value": "#0000FF"},
+        headers=auth_headers,
+    )
+    size_response = await client.post(
+        f"/admin/products/{product_id}/sizes/",
+        json={"name": "L"},
+        headers=auth_headers,
+    )
+
+    variant_response = await client.post(
+        f"/admin/products/{product_id}/variants",
+        json={
+            "sku": "UPD-SKU-001",
+            "price_amount": 1200,
+            "price_currency": "USD",
+            "is_default": True,
+        },
+        headers=auth_headers,
+    )
+    variant_id = variant_response.json()["id"]
+
+    update_response = await client.patch(
+        f"/admin/products/variants/{variant_id}",
+        json={
+            "barcode": None,
+            "status": "ACTIVE",
+            "price_amount": 1300,
+            "price_currency": "USD",
+            "compare_at_price_amount": None,
+            "compare_at_price_currency": None,
+            "cost_amount": None,
+            "cost_currency": None,
+            "color_id": color_response.json()["id"],
+            "size_id": size_response.json()["id"],
+        },
+        headers=auth_headers,
+    )
+
+    assert update_response.status_code == 200
+    data = update_response.json()
+    assert data["color_id"] == color_response.json()["id"]
+    assert data["size_id"] == size_response.json()["id"]
+
+
+@pytest.mark.asyncio
+async def test_update_variant_invalid_size_id(client: AsyncClient, auth_headers: dict):
+    """Test that invalid size_id is rejected on update."""
+    create_response = await client.post(
+        "/admin/products",
+        json={"name": "Invalid Size Update", "slug": "invalid-size-update"},
+        headers=auth_headers,
+    )
+    product_id = create_response.json()["id"]
+
+    variant_response = await client.post(
+        f"/admin/products/{product_id}/variants",
+        json={
+            "sku": "BAD-SIZE-001",
+            "price_amount": 1400,
+            "price_currency": "USD",
+            "is_default": True,
+        },
+        headers=auth_headers,
+    )
+    variant_id = variant_response.json()["id"]
+
+    update_response = await client.patch(
+        f"/admin/products/variants/{variant_id}",
+        json={
+            "barcode": None,
+            "status": "ACTIVE",
+            "price_amount": 1400,
+            "price_currency": "USD",
+            "compare_at_price_amount": None,
+            "compare_at_price_currency": None,
+            "cost_amount": None,
+            "cost_currency": None,
+            "color_id": None,
+            "size_id": str(uuid.uuid4()),
+        },
+        headers=auth_headers,
+    )
+
+    assert update_response.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_add_color_invalid_hex(client: AsyncClient, auth_headers: dict):
+    """Test hex value validation for colors."""
+    create_response = await client.post(
+        "/admin/products",
+        json={"name": "Color Validate Product", "slug": "color-validate-product"},
+        headers=auth_headers,
+    )
+    product_id = create_response.json()["id"]
+
+    response = await client.post(
+        f"/admin/products/{product_id}/colors/",
+        json={"name": "Bad", "hex_value": "red"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_add_size_invalid_product(client: AsyncClient, auth_headers: dict):
+    """Test size creation with invalid product ID."""
+    response = await client.post(
+        f"/admin/products/{uuid.uuid4()}/sizes/",
+        json={"name": "XL"},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio

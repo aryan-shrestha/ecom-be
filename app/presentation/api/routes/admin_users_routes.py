@@ -90,10 +90,10 @@ async def get_user(
         roles=role_list_response_schema
     )
 
-@router.get(
-        "/{user_id}/deactivate", 
-        response_model=UserResponseSchema, 
-        dependencies=[Depends(require_permission("users:write"))]
+@router.patch(
+    "/{user_id}/deactivate",
+    response_model=UserResponseSchema,
+    dependencies=[Depends(require_permission("users:write"))]
 )
 async def deactivate_user(
     user_id: UUID,

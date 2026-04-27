@@ -14,10 +14,12 @@ from app.application.dto.cart_dto import (
     GetCartRequest,
     RemoveCartItemRequest,
     UpdateCartItemRequest,
+    MergeGuestCartRequest,
 )
 from app.application.dto.principal_dto import PrincipalDTO
 from app.application.errors.app_errors import ResourceNotFoundError, ValidationError
 from app.infrastructure.db.sqlalchemy.session import get_session
+from app.presentation.api.deps.auth_deps import get_current_principal
 from app.presentation.api.deps.container import Container, get_container
 from app.presentation.api.schemas.http_cart_schemas import (
     AddCartItemRequestSchema,
@@ -44,20 +46,23 @@ async def get_optional_principal(
     container: Container = Depends(get_container),
 ) -> Optional[PrincipalDTO]:
     """Return PrincipalDTO if a valid Bearer token is provided, else None."""
-    if not authorization or not authorization.startswith("Bearer "):
+    if not authorization:
         return None
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     from app.presentation.api.deps.auth_deps import get_current_principal
     from fastapi import Request as _Request
 
-    try:
-        return await get_current_principal(
-            request=_Request(scope=request.scope, receive=request.receive, send=request.send),
-            authorization=authorization,
-            session=session,
-            container=container,
-        )
-    except Exception:
-        return None
+    return await get_current_principal(
+        request=_Request(scope=request.scope, receive=request.receive, send=request.send),
+        authorization=authorization,
+        session=session,
+        container=container,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -255,4 +260,28 @@ async def clear_cart(
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
+    return _build_cart_response(cart_dto)
+
+
+@router.post("/merge", response_model=CartResponseSchema)
+async def merge_guest_cart(
+    response: Response,
+    principal: PrincipalDTO = Depends(get_current_principal),
+    cart_token: Annotated[Optional[str], Cookie()] = None,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> CartResponseSchema:
+    """Merge guest cart into the authenticated user's cart."""
+    if not cart_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Guest cart token missing",
+        )
+
+    use_case = container.get_merge_guest_cart_use_case(session)
+    cart_dto = await use_case.execute(
+        MergeGuestCartRequest(user_id=principal.user_id, guest_token=cart_token)
+    )
+
+    response.delete_cookie(key=GUEST_TOKEN_COOKIE, path="/")
     return _build_cart_response(cart_dto)

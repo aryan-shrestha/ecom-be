@@ -41,8 +41,6 @@ class ProductVariant:
         """Validate variant invariants."""
         if self.barcode and len(self.barcode) > 100:
             raise ValueError("Barcode cannot exceed 100 characters")
-        if self.size_id and len(self.size_id) > 50:
-            raise ValueError("Size ID cannot exceed 50 characters")
         # Compare at price should be same currency as price
         if self.compare_at_price and self.compare_at_price.currency != self.price.currency:
             raise ValueError("Compare at price must have same currency as price")

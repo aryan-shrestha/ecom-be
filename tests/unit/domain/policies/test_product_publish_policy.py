@@ -37,22 +37,22 @@ class TestProductPublishPolicy:
         variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=SKU("TEST-SKU"),
+            sku=SKU.from_string("TEST-SKU"),
             barcode=None,
             status=VariantStatus.ACTIVE,
-            price=Money(amount_minor=1000, currency="USD"),
+            price=Money(amount=1000, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
-        can_publish, reason = ProductPublishPolicy.can_publish(product, [variant])
+        can_publish, reason = ProductPublishPolicy.can_publish(
+            product, [(variant, variant.status, True)]
+        )
 
         assert can_publish is True
         assert reason is None
@@ -148,22 +148,22 @@ class TestProductPublishPolicy:
         inactive_variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=SKU("TEST-SKU"),
+            sku=SKU.from_string("TEST-SKU"),
             barcode=None,
             status=VariantStatus.INACTIVE,
-            price=Money(amount_minor=1000, currency="USD"),
+            price=Money(amount=1000, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
-        can_publish, reason = ProductPublishPolicy.can_publish(product, [inactive_variant])
+        can_publish, reason = ProductPublishPolicy.can_publish(
+            product, [(inactive_variant, inactive_variant.status, True)]
+        )
 
         assert can_publish is False
         assert "active" in reason.lower()
@@ -190,22 +190,22 @@ class TestProductPublishPolicy:
         variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=None,
+            sku=SKU.from_string("TEST-SKU"),
             barcode=None,
             status=VariantStatus.ACTIVE,
-            price=Money(amount_minor=1000, currency="USD"),
+            price=Money(amount=1000, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
-        can_publish, reason = ProductPublishPolicy.can_publish(product, [variant])
+        can_publish, reason = ProductPublishPolicy.can_publish(
+            product, [(variant, variant.status, False)]
+        )
 
         assert can_publish is False
         assert "sku" in reason.lower()
@@ -232,22 +232,22 @@ class TestProductPublishPolicy:
         variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=SKU("TEST-SKU"),
+            sku=SKU.from_string("TEST-SKU"),
             barcode=None,
             status=VariantStatus.ACTIVE,
-            price=None,
+            price=Money(amount=1000, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
-        can_publish, reason = ProductPublishPolicy.can_publish(product, [variant])
+        can_publish, reason = ProductPublishPolicy.can_publish(
+            product, [(variant, variant.status, False)]
+        )
 
         assert can_publish is False
         assert "price" in reason.lower()
@@ -274,16 +274,14 @@ class TestProductPublishPolicy:
         active_variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=SKU("TEST-SKU-1"),
+            sku=SKU.from_string("TEST-SKU-1"),
             barcode=None,
             status=VariantStatus.ACTIVE,
-            price=Money(amount_minor=1000, currency="USD"),
+            price=Money(amount=1000, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=True,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
@@ -292,23 +290,25 @@ class TestProductPublishPolicy:
         inactive_variant = ProductVariant(
             id=uuid4(),
             product_id=product_id,
-            sku=SKU("TEST-SKU-2"),
+            sku=SKU.from_string("TEST-SKU-2"),
             barcode=None,
             status=VariantStatus.INACTIVE,
-            price=Money(amount_minor=1500, currency="USD"),
+            price=Money(amount=1500, currency="USD"),
             compare_at_price=None,
             cost=None,
-            weight_grams=None,
-            length_mm=None,
-            width_mm=None,
-            height_mm=None,
+            color_id=None,
+            size_id=None,
             is_default=False,
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
         can_publish, reason = ProductPublishPolicy.can_publish(
-            product, [active_variant, inactive_variant]
+            product,
+            [
+                (active_variant, active_variant.status, True),
+                (inactive_variant, inactive_variant.status, True),
+            ],
         )
 
         assert can_publish is True

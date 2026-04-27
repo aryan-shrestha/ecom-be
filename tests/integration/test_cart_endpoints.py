@@ -171,6 +171,26 @@ async def test_clear_cart(client: AsyncClient, session: AsyncSession):
     assert clear_resp.json()["items"] == []
 
 
+@pytest.mark.asyncio
+async def test_invalid_auth_header_rejected_for_cart(client: AsyncClient):
+    """Invalid Authorization header returns 401 instead of guest fallback."""
+    resp = await client.get(
+        "/cart",
+        headers={"Authorization": "Basic invalid"},
+    )
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_invalid_bearer_token_rejected_for_cart(client: AsyncClient):
+    """Invalid Bearer token returns 401."""
+    resp = await client.get(
+        "/cart",
+        headers={"Authorization": "Bearer invalid.token.value"},
+    )
+    assert resp.status_code == 401
+
+
 # ---------------------------------------------------------------------------
 # Authenticated cart tests
 # ---------------------------------------------------------------------------
@@ -190,6 +210,44 @@ async def test_authenticated_user_has_own_cart(client: AsyncClient, session: Asy
     data = resp.json()
     assert len(data["items"]) == 1
     assert data["user_id"] is not None
+
+
+@pytest.mark.asyncio
+async def test_merge_guest_cart_into_user_cart(client: AsyncClient, session: AsyncSession):
+    """Guest cart merges into authenticated cart and quantities sum."""
+    _, variant_id = await _create_published_variant(session)
+
+    # Create guest cart and add item quantity 2
+    guest_cart = await client.get("/cart")
+    cart_token = guest_cart.cookies.get("cart_token")
+    cookies = {"cart_token": cart_token} if cart_token else {}
+
+    await client.post(
+        "/cart/items",
+        json={"variant_id": str(variant_id), "quantity": 2},
+        cookies=cookies,
+    )
+
+    # Login and add same variant with quantity 1
+    token = await _register_and_login(client, f"merge_{uuid.uuid4().hex[:6]}@test.com")
+    await client.post(
+        "/cart/items",
+        json={"variant_id": str(variant_id), "quantity": 1},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Merge guest cart into user cart
+    merge_resp = await client.post(
+        "/cart/merge",
+        headers={"Authorization": f"Bearer {token}"},
+        cookies=cookies,
+    )
+
+    assert merge_resp.status_code == 200
+    data = merge_resp.json()
+    assert data["user_id"] is not None
+    assert len(data["items"]) == 1
+    assert data["items"][0]["quantity"] == 3
 
 
 @pytest.mark.asyncio
