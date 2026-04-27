@@ -10,7 +10,7 @@ from app.infrastructure.db.sqlalchemy.models.size_model import SizeModel
 from app.infrastructure.mappers.size_mapper import SizeMapper
 
 
-class SQLAlchemySizeRepository(SizeRepository):
+class SqlAlchemySizeRepository(SizeRepository):
     """SQLAlchemy implementation of the SizeRepository interface."""
 
     def __init__(self, session: AsyncSession):

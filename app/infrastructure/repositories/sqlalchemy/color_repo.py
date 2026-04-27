@@ -13,7 +13,7 @@ from app.infrastructure.db.sqlalchemy.models.color_model import ColorModel
 from app.infrastructure.mappers.color_mapper import ColorMapper
 
 
-class SQLAlchemyColorRepository(ColorRepository):
+class SqlAlchemyColorRepository(ColorRepository):
     """SQLAlchemy implementation of the ColorRepository interface."""
 
     def __init__(self, session: AsyncSession):

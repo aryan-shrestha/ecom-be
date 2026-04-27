@@ -17,7 +17,8 @@ from app.infrastructure.repositories.sqlalchemy.inventory_repo import SqlAlchemy
 from app.infrastructure.repositories.sqlalchemy.cart_repo import SqlAlchemyCartRepository
 from app.infrastructure.repositories.sqlalchemy.order_repo import SqlAlchemyOrderRepository
 from app.infrastructure.repositories.sqlalchemy.idempotency_repo import SqlAlchemyIdempotencyRepository
-
+from app.infrastructure.repositories.sqlalchemy.color_repo import SqlAlchemyColorRepository
+from app.infrastructure.repositories.sqlalchemy.size_repo import SqlAlchemySizeRepository
 
 class SqlAlchemyUnitOfWork(UnitOfWork):
     """SQLAlchemy Unit of Work for transaction management."""
@@ -34,6 +35,8 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.carts = SqlAlchemyCartRepository(session)
         self.orders = SqlAlchemyOrderRepository(session)
         self.idempotency = SqlAlchemyIdempotencyRepository(session)
+        self.colors = SqlAlchemyColorRepository(session)
+        self.sizes = SqlAlchemySizeRepository(session)
 
     async def __aenter__(self) -> "SqlAlchemyUnitOfWork":
         """Enter transaction context."""
