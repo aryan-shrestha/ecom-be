@@ -18,6 +18,8 @@ from app.application.dto.product_dto import (
     UploadProductImageRequest,
     UploadVariantImageRequest,
 )
+from app.application.dto.color_dto import ColorCreateRequest
+from app.application.dto.size_dto import SizeCreateRequest
 from app.application.dto.principal_dto import PrincipalDTO
 from app.application.errors.app_errors import (
     ConflictError,
@@ -30,6 +32,7 @@ from app.infrastructure.db.sqlalchemy.session import get_session
 from app.presentation.api.deps.auth_deps import get_current_principal, require_permission
 from app.presentation.api.deps.container import Container, get_container
 from app.presentation.api.schemas.http_product_schemas import (
+    ColorResponseSchema,
     ColorSchema,
     CreateProductRequestSchema,
     UpdateProductRequestSchema,
@@ -49,6 +52,8 @@ from app.presentation.api.schemas.http_product_schemas import (
     MoneySchema,
     InventoryResponseSchema,
     CategoryResponseSchema,
+    ColorCreateRequestSchema,
+    ColorResponseSchema,
 )
 from app.presentation.api.schemas.http_auth_schemas import MessageResponseSchema
 
@@ -828,5 +833,88 @@ async def assign_categories(
         await use_case.execute(request)
 
         return MessageResponseSchema(message="Categories assigned successfully")
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get(
+    "/{product_id}/colors",
+    response_model=list[ColorResponseSchema],
+    dependencies=[Depends(require_permission("products:read"))],
+)
+async def list_colors_by_product(
+    product_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> list[ColorResponseSchema]:
+    """List colors for a product."""
+    use_case = container.get_colors_by_product_use_case(session)
+
+    try:
+        colors = await use_case.execute(product_id)
+        return [
+            ColorResponseSchema(
+                name=color.name,
+                hex_value=color.hex_value,
+                created_at=color.created_at,
+                updated_at=color.updated_at,
+                product_id=product_id
+            )
+            for color in colors
+        ]
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post(
+    "/{product_id}/colors/",
+    response_model=ColorResponseSchema,
+    dependencies=[Depends(require_permission("products:write"))],
+)
+async def add_color_to_product(
+    product_id: UUID,
+    request_data: ColorCreateRequestSchema,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> ColorResponseSchema:
+    """Add color option to product."""
+    use_case = container.get_add_color_use_case(session)
+    color_create_request = ColorCreateRequest(
+        name=request_data.name,
+        hex_value=request_data.hex_value,
+        product_id=product_id
+    )
+    try:
+        color = await use_case.execute(color_create_request)
+        return ColorResponseSchema(
+            name=color.name,
+            hex_value=color.hex_value,
+            created_at=color.created_at,
+            updated_at=color.updated_at,
+            product_id=color_create_request.product_id
+        )
+    except ResourceNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    
+
+@router.delete(
+    "/{product_id}/colors/{color_id}",
+    response_model=MessageResponseSchema,
+    dependencies=[Depends(require_permission("products:write"))],
+)
+async def remove_color_from_product(
+    product_id: UUID,
+    color_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    container: Container = Depends(get_container),
+) -> MessageResponseSchema:
+    """Remove color option from product."""
+    use_case = container.get_remove_color_use_case(session)
+
+    try:
+        await use_case.execute(product_id, color_id)
+        return MessageResponseSchema(message="Color removed from product successfully", status=status.HTTP_204_NO_CONTENT)
     except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

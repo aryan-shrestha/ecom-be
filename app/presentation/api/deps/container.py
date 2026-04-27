@@ -66,6 +66,9 @@ from app.application.use_cases.orders.get_order_detail import GetOrderDetailUseC
 from app.application.use_cases.orders.admin_list_orders import AdminListOrdersUseCase
 from app.application.use_cases.orders.admin_get_order import AdminGetOrderUseCase
 from app.application.use_cases.orders.admin_cancel_order import AdminCancelOrderUseCase
+from app.application.use_cases.products.add_color import AddColorUseCase
+from app.application.use_cases.products.remove_color import RemoveColorUseCase
+from app.application.use_cases.products.list_color_by_product import ListColorByProductUseCase
 from app.infrastructure.caching.memory_cache import MemoryCache
 from app.infrastructure.caching.system_clock import SystemClock
 from app.infrastructure.observability.audit_logger import StructuredAuditLogger
@@ -460,6 +463,29 @@ class Container:
         return ListProductsStorefrontUseCase(
             uow=self.get_uow(session),
             cache=self._cache,
+        )
+    
+    # Color use cases
+    def get_add_color_use_case(self, session: AsyncSession) -> AddColorUseCase:
+        """Get AddColorUseCase."""
+        return AddColorUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+    
+    def get_remove_color_use_case(self, session: AsyncSession) -> RemoveColorUseCase:
+        """Get RemoveColorUseCase."""
+        return RemoveColorUseCase(
+            uow=self.get_uow(session),
+            clock=self._clock,
+            audit_log=self._audit_log,
+        )
+
+    def get_colors_by_product_use_case(self, session: AsyncSession) -> ListColorByProductUseCase:
+        """Get ListColorByProductUseCase."""
+        return ListColorByProductUseCase(
+            uow=self.get_uow(session),
         )
 
     # Category use cases

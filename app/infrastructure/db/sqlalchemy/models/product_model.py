@@ -29,11 +29,3 @@ class ProductModel(Base):
     updated_at: Mapped[datetime] = mapped_column(nullable=False)
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
     updated_by: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), nullable=True)
-
-    images: Mapped[list['ProductImageModel']] = relationship(
-        "ProductImageModel", 
-        back_populates="product", 
-        cascade="all, delete-orphan", 
-        order_by="ProductImageModel.position", 
-        lazy="selectin"
-    )

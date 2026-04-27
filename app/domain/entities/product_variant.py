@@ -8,6 +8,8 @@ from uuid import UUID
 
 from app.domain.value_objects.money import Money
 from app.domain.value_objects.sku import SKU
+from app.domain.entities.color import Color
+from app.domain.entities.size import Size
 
 
 class VariantStatus(Enum):
@@ -16,26 +18,6 @@ class VariantStatus(Enum):
     ACTIVE = "ACTIVE"
     INACTIVE = "INACTIVE"
 
-@dataclass(frozen=True)
-class Color:
-    """Variant color."""
-
-    name: str
-    hex_code: Optional[str] = None
-
-    def __post_init__(self) -> None:
-        if not self.name or not self.name.strip():
-            raise ValueError("Color name cannot be empty")
-
-        object.__setattr__(self, "name", self.name.strip())
-
-        if self.hex_code is not None:
-            hex_code = self.hex_code.strip()
-
-            if not hex_code.startswith("#") or len(hex_code) != 7:
-                raise ValueError("Color hex code must be in format #RRGGBB")
-
-            object.__setattr__(self, "hex_code", hex_code.upper())
 
 @dataclass(frozen=True)
 class ProductVariant:
@@ -50,7 +32,7 @@ class ProductVariant:
     compare_at_price: Optional[Money]
     cost: Optional[Money]
     color: Optional[Color]
-    size: Optional[str]
+    size: Optional[Size]
     is_default: bool
     created_at: datetime
     updated_at: datetime
@@ -59,8 +41,8 @@ class ProductVariant:
         """Validate variant invariants."""
         if self.barcode and len(self.barcode) > 100:
             raise ValueError("Barcode cannot exceed 100 characters")
-        if self.size and len(self.size) > 3:
-            raise ValueError("Size cannot exceed 3 characters")
+        if self.size and len(self.size.name) > 50:
+            raise ValueError("Size name cannot exceed 50 characters")
         # Compare at price should be same currency as price
         if self.compare_at_price and self.compare_at_price.currency != self.price.currency:
             raise ValueError("Compare at price must have same currency as price")
@@ -97,7 +79,7 @@ class ProductVariant:
         compare_at_price: Optional[Money],
         cost: Optional[Money],
         color: Optional[Color],
-        size: Optional[str],
+        size: Optional[Size],
         updated_at: datetime,
     ) -> "ProductVariant":
         """Return new variant with updated details."""

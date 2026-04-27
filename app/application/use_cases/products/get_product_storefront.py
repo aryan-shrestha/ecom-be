@@ -1,6 +1,7 @@
 """Get product storefront detail use case."""
 
 from app.application.dto.product_dto import (
+    ColorDTO,
     ProductDetailResponse,
     ProductDTO,
     VariantDTO,
@@ -103,10 +104,15 @@ class GetProductStorefrontUseCase:
                             else None
                         ),
                         cost=None,  # Hide cost from storefront
-                        weight=v.weight,
-                        length=v.length,
-                        width=v.width,
-                        height=v.height,
+                        color=(
+                            ColorDTO(
+                                name=v.color.name,
+                                hex_code=v.color.hex_code,
+                            )
+                            if v.color
+                            else None
+                        ),
+                        size=v.size,
                         is_default=v.is_default,
                         created_at=v.created_at,
                         updated_at=v.updated_at,

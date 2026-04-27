@@ -309,3 +309,23 @@ class StorefrontProductListResponseSchema(BaseModel):
     total: int
     offset: int
     limit: int
+
+
+class ColorCreateRequestSchema(BaseModel):
+    """Request to create color."""
+
+    name: str = Field(..., min_length=1, max_length=50)
+    hex_value: Optional[str] = Field(
+        None,
+        pattern=r"^#([A-Fa-f0-9]{6})$",
+        description="Hex code in format #RRGGBB",
+    )
+
+class ColorResponseSchema(BaseModel):
+    """Color response."""
+
+    name: str
+    hex_value: Optional[str]
+    created_at: datetime
+    updated_at: datetime
+    product_id: UUID

@@ -4,8 +4,10 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from app.domain.repositories.auth_repository import AuthRepository
+from app.domain.repositories.color_repository import ColorRepository
 from app.domain.repositories.rbac_repository import RbacRepository
 from app.domain.repositories.refresh_token_repository import RefreshTokenRepository
+from app.domain.repositories.size_repository import SizeRepository
 from app.domain.repositories.user_repository import UserRepository
 from app.domain.repositories.product_repository import ProductRepository
 from app.domain.repositories.category_repository import CategoryRepository
@@ -32,6 +34,8 @@ class UnitOfWork(ABC):
     carts: CartRepository
     orders: OrderRepository
     idempotency: IdempotencyRepository
+    colors: ColorRepository
+    sizes: SizeRepository
 
     @abstractmethod
     async def __aenter__(self) -> "UnitOfWork":
